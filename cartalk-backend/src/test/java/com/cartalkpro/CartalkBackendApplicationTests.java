@@ -1,4 +1,4 @@
-package anan.cartalk_backend;
+package com.cartalkpro;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

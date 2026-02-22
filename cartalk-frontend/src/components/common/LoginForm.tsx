@@ -27,16 +27,27 @@ function KakaoIcon() {
   )
 }
 
-export function LoginForm() {
+// 로그인 백엔드 연결하는중
+// ✅ 1. 부모(LoginPage)로부터 받을 '함수'의 타입을 정의해줍니다.
+interface LoginFormProps {
+  onSubmit: (data: any) => void;
+}
+
+// ✅ 2. props에서 onSubmit을 꺼내옵니다.
+export function LoginForm({ onSubmit }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  // 나중에 Spring API와 연결할 함수 예시
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("로그인 시도:", { email, password });
+
+    // ✅ 3. 여기가 핵심! 부모가 준 함수에 우리가 입력한 데이터를 담아서 실행합니다.
+    // 그러면 LoginPage에 있는 handleLoginSubmit이 이 데이터를 들고 백엔드로 날아갑니다.
+    onSubmit({ email, password });
   }
+
+
 
   return (
     <form onSubmit={handleLogin} className="flex flex-col gap-8">
@@ -51,7 +62,7 @@ export function LoginForm() {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-12 pl-10 bg-secondary border-border"
+            className="h-12 pl-10 bg-secondary border-border text-foreground"
             required
           />
         </div>
@@ -71,7 +82,7 @@ export function LoginForm() {
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="h-12 pl-10 pr-10 bg-secondary border-border"
+            className="h-12 pl-10 pr-10 bg-secondary border-border text-foreground"
             required
           />
           <button

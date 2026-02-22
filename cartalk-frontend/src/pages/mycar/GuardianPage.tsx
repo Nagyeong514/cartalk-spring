@@ -31,36 +31,44 @@ function StatCard({ icon, label, value, sub, accent = "text-primary" }: { icon: 
   );
 }
 
-/* 2. Car Hero Section (사진 크기 대폭 확대!) */
-function CarHero({ shrink }: { shrink: boolean }) {
+/* 2. Car Hero Section (디자인 유지 + 데이터 바인딩) */
+function CarHero({ shrink, carData }: { shrink: boolean; carData: any }) {
   return (
     <div
       className={`relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-border bg-card transition-all duration-500 ease-in-out ${
         shrink ? "lg:col-span-1" : "lg:col-span-2"
       }`}
-      // ✅ minHeight를 늘려서 초기 영역을 확보합니다.
       style={{ minHeight: shrink ? 400 : 600 }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80" />
       <div className="relative z-10 flex w-full flex-col items-center gap-6 p-8">
         <img
-          src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=1200" // 더 큰 이미지 요청
-          alt="2024 BMW 5 Series"
-          // ✅ 초기(shrink=false) 높이를 max-h-[500px]로 키우고 w-full로 꽉 채웁니다.
-          // 패널이 열렸을 때도 max-h-80으로 기존보다 더 크게 유지합니다.
+          src="https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&q=80&w=1200"
+          alt="My Vehicle"
           className={`object-contain transition-all duration-500 w-full ${shrink ? "max-h-80" : "max-h-[500px]"}`}
         />
         <div className="flex flex-col items-center gap-2 text-center">
-          {/* 폰트 크기도 조금 더 키워 존재감을 높였습니다. */}
-          <h2 className="text-3xl font-black tracking-tight text-foreground">BMW 5 Series</h2>
-          <p className="text-base text-muted-foreground">2024 Sedan</p>
-          <div className="mt-2 flex items-center gap-4">
-            <span className="rounded-md bg-primary/10 px-4 py-1.5 text-lg font-bold text-primary">$58,900</span>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} className={`h-4 w-4 ${i <= 4 ? "fill-accent text-accent" : "text-muted-foreground"}`} />
-              ))}
-              <span className="ml-1 text-sm text-muted-foreground">4.7</span>
+          {/* ✅ 백엔드 데이터: 가입할 때 기입한 차명 */}
+          <h2 className="text-3xl font-black tracking-tight text-foreground">
+            {carData?.modelName || "My Car"}
+          </h2>
+          {/* ✅ 백엔드 데이터: 년도식 */}
+          <p className="text-base text-muted-foreground">{carData?.modelYear || "2025"} Model</p>
+
+          <div className="mt-2 flex flex-col items-center gap-3">
+             {/* ✅ 백엔드 데이터: 차대번호(VIN) 추가 */}
+            <span className="rounded-full bg-secondary px-4 py-1 text-[10px] font-mono text-zinc-500">
+              VIN: {carData?.vin || "-----------"}
+            </span>
+
+            <div className="flex items-center gap-4">
+              <span className="rounded-md bg-primary/10 px-4 py-1.5 text-lg font-bold text-primary">$58,900</span>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Star key={i} className={`h-4 w-4 ${i <= 4 ? "fill-accent text-accent" : "text-muted-foreground"}`} />
+                ))}
+                <span className="ml-1 text-sm text-muted-foreground">4.7</span>
+              </div>
             </div>
           </div>
         </div>
@@ -69,7 +77,7 @@ function CarHero({ shrink }: { shrink: boolean }) {
   );
 }
 
-/* 3. Detail Panels (Side Panels) */
+/* 3. Detail Panels (동일) */
 function GuardianPanel() {
   return (
     <div className="flex flex-col gap-6">
@@ -135,7 +143,7 @@ function RepairShopsPanel() {
 }
 
 function CarWashPanel() {
-  const score = 85; // 점수 상향 조정
+  const score = 85;
   return (
     <div className="flex flex-col gap-6">
       <h3 className="text-xl font-bold text-foreground">Car Wash Index</h3>
@@ -163,7 +171,7 @@ function CarWashPanel() {
   );
 }
 
-/* 4. Slide Panel Orchestrator (패널 너비 확대!) */
+/* 4. Slide Panel Orchestrator (디자인 유지) */
 function SlidePanel({ activeTab, onClose }: { activeTab: TabKey | null; onClose: () => void }) {
   const isOpen = activeTab !== null;
   const panelTitles: Record<TabKey, string> = { summary: "Summary", photos: "Photos", evaluation: "Evaluation", guardian: "Guardian Alerts", repair: "Repair Shops", carwash: "Car Wash Index" };
@@ -171,7 +179,6 @@ function SlidePanel({ activeTab, onClose }: { activeTab: TabKey | null; onClose:
   return (
     <>
       {isOpen && <div className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm lg:hidden" onClick={onClose} />}
-      {/* ✅ lg:w-auto 대신 w-full로 설정하여 부모 Grid의 비율을 따르게 합니다. */}
       <aside className={`fixed right-0 top-0 z-50 flex h-full w-full flex-col border-l-2 border-border bg-card transition-transform duration-500 ease-in-out lg:static lg:z-auto lg:h-auto lg:rounded-2xl lg:border-2 shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full lg:hidden"}`}>
         {activeTab && (
           <>
@@ -183,7 +190,6 @@ function SlidePanel({ activeTab, onClose }: { activeTab: TabKey | null; onClose:
               {activeTab === "guardian" && <GuardianPanel />}
               {activeTab === "repair" && <RepairShopsPanel />}
               {activeTab === "carwash" && <CarWashPanel />}
-              {/* 다른 탭 내용도 여기에 추가... */}
             </div>
           </>
         )}
@@ -195,6 +201,38 @@ function SlidePanel({ activeTab, onClose }: { activeTab: TabKey | null; onClose:
 // ─── Main Page Component ────────────────────────────────────────────────────────
 export default function GuardianPage() {
   const [activeTab, setActiveTab] = useState<TabKey | null>(null);
+
+  // ✅ [데이터 관리] 실제 데이터를 담을 상태 관리
+  const [carData, setCarData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ [API 연결] 페이지 로드 시 백엔드에서 데이터 가져오기
+  useEffect(() => {
+    const fetchMyCarInfo = async () => {
+      const token = localStorage.getItem("accessToken"); //
+
+      try {
+        const response = await fetch("http://localhost:8080/api/vehicle/my", {
+          headers: {
+            "Authorization": `Bearer ${token}` //
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json(); //
+          console.log("🔥 내 차 정보 도착:", data);
+          setCarData(data); //
+        }
+      } catch (error) {
+        console.error("차량 정보 로드 실패:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyCarInfo();
+  }, []);
+
   const tabs: Tab[] = [
     { key: "summary", label: "Summary", icon: <FileText className="h-4 w-4" /> },
     { key: "photos", label: "Photos", icon: <Camera className="h-4 w-4" /> },
@@ -204,11 +242,19 @@ export default function GuardianPage() {
     { key: "carwash", label: "Car Wash", icon: <Droplets className="h-4 w-4" /> },
   ];
 
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">CarTalk Pro 보안 연결 중...</div>;
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground dark">
       <main className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard icon={<Gauge className="h-5 w-5" />} label="Mileage" value="34,218 mi" sub="Updated today" />
+          {/* ✅ 마일리지 카드: DB의 진짜 데이터를 숫자로 변환해서 출력합니다. */}
+          <StatCard
+            icon={<Gauge className="h-5 w-5" />}
+            label="Mileage"
+            value={`${carData?.mileage?.toLocaleString() || "0"} mi`}
+            sub="Updated from server"
+          />
           <StatCard icon={<AlertTriangle className="h-5 w-5" />} label="Recall Alerts" value="1 Active" sub="Engine defect" accent="text-destructive" />
           <StatCard icon={<Droplets className="h-5 w-5" />} label="Car Wash Index" value="85/100" sub="Perfect day!" accent="text-emerald-500" />
           <StatCard icon={<Wrench className="h-5 w-5" />} label="Maintenance" value="D-15" sub="Oil change due" accent="text-amber-500" />
@@ -225,9 +271,9 @@ export default function GuardianPage() {
           })}
         </nav>
 
-        {/* ✅ 핵심 변경! Grid 비율을 [1fr_3fr] (25% : 75%)로 설정 */}
+        {/* ✅ 디자인 레이아웃 완벽 보존! 데이터만 CarHero에 전달 */}
         <div className={`grid flex-1 gap-6 transition-all duration-500 ${activeTab !== null ? "lg:grid-cols-[1fr_3fr]" : "lg:grid-cols-1"}`}>
-          <CarHero shrink={activeTab !== null} />
+          <CarHero shrink={activeTab !== null} carData={carData} />
           <SlidePanel activeTab={activeTab} onClose={() => setActiveTab(null)} />
         </div>
       </main>

@@ -1,4 +1,4 @@
-package anan.cartalk_backend;
+package com.cartalkpro;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

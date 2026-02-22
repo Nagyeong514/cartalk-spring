@@ -18,6 +18,7 @@ repositories {
 	mavenCentral()
 }
 
+// 코끼리 누르기
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	// MVC 패턴과 API 개발을 위한 필수 도구
@@ -33,6 +34,11 @@ dependencies {
 	// ✅ [추가] Lombok: Getter, Setter 작성을 자동화해주는 꿀템
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// ✅ JWT 관련 라이브러리 (jjwt)
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 }
 
 tasks.named('test') {
