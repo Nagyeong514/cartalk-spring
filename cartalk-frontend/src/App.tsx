@@ -1,37 +1,44 @@
-// src/App.tsx
+// src/App.tsx 최종 정리본
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import DefaultLayout from "./layouts/DefaultLayout"
+
+// 레이아웃 임포트 (파일이 실제로 src/layouts/ 안에 있어야 합니다!)
+import DefaultLayout from "./layouts/DefaultLayout" // 상단 바 있는 레이아웃
+import AuthLayout from "./layouts/AuthLayout"       // 상단 바 없는 레이아웃
+
+// 페이지 임포트
+import LandingPage from "./pages/home/LandingPage"
 import LoginPage from "./pages/auth/LoginPage"
+import SignUpPage from "./pages/auth/SignUpPage"
 import PostList from "./pages/community/PostList"
 import PostWrite from "./pages/community/PostWrite"
-
-// ✅ [수정 1] 가디언 페이지 임포트를 추가했습니다!
+import PostDetail from "./pages/community/PostDetail"
 import GuardianPage from "./pages/mycar/GuardianPage"
-import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard"
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 로그인 페이지 */}
-        <Route element={<DefaultLayout />}>
+        {/* 1. 대문 (로그인 전) */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* 2. 인증 (상단 바 없음) */}
+        <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
         </Route>
 
-        {/* 커뮤니티 페이지들 */}
-        <Route path="/community" element={<PostList />} />
-        <Route path="/community/write" element={<PostWrite />} />
+        {/* 3. 서비스 본체 (통합 상단 바 적용) */}
+        <Route element={<DefaultLayout />}>
+          <Route path="/guardian" element={<GuardianPage />} />
+          <Route path="/community" element={<PostList />} />
+          <Route path="/community/write" element={<PostWrite />} />
+          <Route path="/community/:id" element={<PostDetail />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Route>
 
-        {/* ✅ [수정 2] 가디언 페이지를 '별표(*)' 위로 올렸습니다! */}
-        <Route path="/guardian" element={<GuardianPage />} />
-
-        {/* ✅ [수정 3] 중복된 '/'를 정리하고 기본 페이지를 가디언으로 설정했습니다. */}
-        <Route path="/" element={<Navigate to="/guardian" replace />} />
-
-        {/* 마지막 수단: 지정되지 않은 모든 경로는 커뮤니티로 보냅니다. */}
+        {/* 4. 예외 처리: 이상한 주소는 커뮤니티로 */}
         <Route path="*" element={<Navigate to="/community" replace />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-
       </Routes>
     </BrowserRouter>
   )

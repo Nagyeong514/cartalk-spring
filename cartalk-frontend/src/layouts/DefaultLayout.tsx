@@ -1,15 +1,16 @@
+import { Outlet } from "react-router-dom";
+import Navbar from "../components/layout/Navbar";
 
-// src/layouts/DefaultLayout.tsx
-// 로그인 전 (사이드바 없음)
-import { Outlet } from "react-router-dom"
-
-export default function DefaultLayout() {
+export default function MainLayout() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* 사이드바 없는 레이아웃입니다.
-         여기에 공통 헤더를 넣거나, 그냥 바로 Outlet을 렌더링합니다.
-      */}
-      <Outlet />
+    <div className="min-h-screen bg-[#09090b] text-white font-sans">
+      {/* 🚀 통합 상단 네비게이션 바 */}
+      <Navbar />
+
+      {/* 🚀 실제 페이지 내용 영역 */}
+      <main>
+        <Outlet />
+      </main>
     </div>
-  )
+  );
 }

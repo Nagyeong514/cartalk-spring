@@ -169,36 +169,39 @@ function CategoryTabs({ categories, active, onChange }: { categories: readonly s
   );
 }
 
+// ─── PostCard
 function PostCard({ post }: { post: PostItem }) {
   return (
-    <article className="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:bg-accent/30">
-      <div className="mb-3 flex items-center gap-2">
-        <span className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-semibold ${post.tagColor}`}>
-          <Car className="h-3 w-3" />
-          {post.carTag}
-        </span>
-        <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{post.category}</span>
-        {post.isHot && (
-          <span className="flex items-center gap-1 rounded-md bg-cartalk-rose/15 px-2 py-0.5 text-xs font-semibold text-cartalk-rose">
-            <Flame className="h-3 w-3" />
-            HOT
+    <Link to={`/community/${post.id}`} className="block">
+      <article className="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:bg-accent/30 cursor-pointer">
+        <div className="mb-3 flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-semibold ${post.tagColor}`}>
+            <Car className="h-3 w-3" />
+            {post.carTag}
           </span>
-        )}
-      </div>
-      <h3 className="mb-2 text-base font-bold text-foreground transition-colors group-hover:text-primary">{post.title}</h3>
-      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{post.preview}</p>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">{post.avatar}</div>
-          <span className="text-sm font-medium text-foreground">{post.author}</span>
-          <span className="text-xs text-muted-foreground">{post.date}</span>
+          <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{post.category}</span>
+          {post.isHot && (
+            <span className="flex items-center gap-1 rounded-md bg-cartalk-rose/15 px-2 py-0.5 text-xs font-semibold text-cartalk-rose">
+              <Flame className="h-3 w-3" />
+              HOT
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <span className="flex items-center gap-1 text-xs"><Heart className="h-3.5 w-3.5" />{post.likes}</span>
-          <span className="flex items-center gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" />{post.comments}</span>
+        <h3 className="mb-2 text-base font-bold text-foreground transition-colors group-hover:text-primary">{post.title}</h3>
+        <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{post.preview}</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">{post.avatar}</div>
+            <span className="text-sm font-medium text-foreground">{post.author}</span>
+            <span className="text-xs text-muted-foreground">{post.date}</span>
+          </div>
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <span className="flex items-center gap-1 text-xs"><Heart className="h-3.5 w-3.5" />{post.likes}</span>
+            <span className="flex items-center gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" />{post.comments}</span>
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+    </Link>
   );
 }
 
@@ -249,28 +252,6 @@ export default function CommunityPostList() {
 
   return (
     <div className="min-h-screen bg-background text-foreground dark"> {/* 다크 모드를 강제 적용합니다 */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Car className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-black tracking-tight text-foreground">CarTalk Pro</h1>
-              <p className="text-[11px] text-muted-foreground">Community</p>
-            </div>
-          </div>
-          <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">
-            {/* 3. href를 to로 변경합니다! */}
-            <Link to="/community" className="text-foreground transition-colors">Forum</Link>
-            <span className="cursor-default transition-colors hover:text-foreground">Garage</span>
-            <span className="cursor-default transition-colors hover:text-foreground">Market</span>
-            <span className="cursor-default transition-colors hover:text-foreground">Events</span>
-          </nav>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">U</div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-7xl px-4 py-6 lg:px-8">
         <section className="mb-6"><StatsRow stats={STATS} /></section>
         <section className="mb-6"><CategoryTabs categories={CATEGORIES} active={activeCategory} onChange={setActiveCategory} /></section>

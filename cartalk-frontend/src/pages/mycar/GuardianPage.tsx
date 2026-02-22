@@ -206,16 +206,6 @@ export default function GuardianPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground dark">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4 lg:px-8">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            <span className="text-xl font-black tracking-tight text-foreground">CarTalk Pro</span>
-          </div>
-        </div>
-        <div className="flex h-9 w-9 rounded-full bg-primary/20 ring-2 ring-primary/40" />
-      </header>
-
       <main className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard icon={<Gauge className="h-5 w-5" />} label="Mileage" value="34,218 mi" sub="Updated today" />

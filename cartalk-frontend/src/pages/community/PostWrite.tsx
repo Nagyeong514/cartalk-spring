@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, type DragEvent, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Car,
   ImagePlus,
   X,
@@ -33,25 +32,6 @@ const SUGGESTED_TAGS = [
 ] as const;
 
 // ─── Sub-Components ─────────────────────────────────────────────────────────────
-
-function PageHeader() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-4 lg:px-0">
-        <Link
-          to="/community"
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-secondary text-foreground transition-colors hover:bg-accent"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div>
-          <h1 className="text-lg font-black tracking-tight text-foreground">Write Post</h1>
-          <p className="text-[11px] text-muted-foreground">Share with the CarTalk Pro community</p>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function CategorySelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -232,7 +212,6 @@ export default function CommunityPostWrite() {
 
   return (
     <div className="min-h-screen bg-background text-foreground dark">
-      <PageHeader />
       <main className="mx-auto max-w-3xl px-4 py-8 lg:px-0">
         <div className="flex flex-col gap-8">
           <CategorySelector value={category} onChange={setCategory} />
