@@ -50,6 +50,13 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      cartalk: {
+          cyan: "#22d3ee",
+          emerald: "#10b981",
+          amber: "#f59e0b",
+          rose: "#f43f5e",
+          surface: "#1f2937",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
