@@ -1,6 +1,4 @@
-
 package com.cartalkpro.global.config;
-// 프로젝트 보안 설정 및 암호화 도구 등록
 
 import com.cartalkpro.global.util.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -36,31 +34,35 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                // ✅ 1. CORS 설정을 세밀하게 조정합니다. (403 해결의 핵심!)
+                // 1. 통합된 CORS 설정을 적용합니다.
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/member/signup", "/api/member/login").permitAll()
-                        .anyRequest().authenticated() // ✅ /api/vehicle/my 등은 인증이 필요함
+                        .anyRequest().authenticated()
                 )
 
-                // ✅ 2. JWT 필터 등록
+                // 2. JWT 인증 필터를 보안 흐름 앞에 끼워넣습니다.
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ CORS 세부 설정: 브라우저가 Authorization 헤더를 실어 보내는 것을 허용합니다.
+    // 모든 CORS 정책을 여기서 집중 관리합니다.
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5174")); // 리액트 주소
+
+        // 5173 포트 허용 및 실제 인증 정보(Credentials) 공유 설정
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // ✅ Authorization 헤더 허용!
-        config.setAllowCredentials(true); // ✅ 쿠키나 인증 헤더 허용
-        config.setMaxAge(3600L);
+
+        // JWT 통신을 위해 Authorization 헤더를 명시적으로 허용하는 것이 핵심입니다.
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L); // 프리플라이트 요청 캐싱 시간 (1시간)
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

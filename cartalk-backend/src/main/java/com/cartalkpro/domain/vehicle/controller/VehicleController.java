@@ -5,7 +5,6 @@ import com.cartalkpro.domain.vehicle.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,7 +13,6 @@ import com.cartalkpro.domain.vehicle.dto.VehicleResponseDto;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/vehicle")
-@CrossOrigin(origins = "http://localhost:5174") // ✅ 리액트 포트의 요청을 허용합니다!
 public class VehicleController {
 
     private final VehicleRepository vehicleRepository;
