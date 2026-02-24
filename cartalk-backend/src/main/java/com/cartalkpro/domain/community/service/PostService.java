@@ -1,7 +1,10 @@
 package com.cartalkpro.domain.community.service;
 
+import com.cartalkpro.domain.community.dto.CommentRequestDto;
 import com.cartalkpro.domain.community.dto.PostCreateRequestDto;
+import com.cartalkpro.domain.community.dto.PostDetailResponseDto;
 import com.cartalkpro.domain.community.dto.PostListResponseDto;
+import com.cartalkpro.domain.community.entity.Comment;
 import com.cartalkpro.domain.community.entity.Post;
 import com.cartalkpro.domain.community.repository.PostRepository;
 import com.cartalkpro.domain.member.entity.Member;
@@ -52,5 +55,33 @@ public class PostService {
         return posts.stream()
                 .map(PostListResponseDto::new) // 엔티티를 DTO 가방에 담기
                 .collect(Collectors.toList());
+    }
+
+    // 3. 게시글 상세 보기 (조회수 증가 포함)
+    @Transactional
+    public PostDetailResponseDto getPostDetail(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+
+        // TODO: 조회수 중복 증가 방지 로직은 추후 쿠키로 구현 가능합니다.
+        // post.increaseViewCount(); // 엔티티에 메서드 추가 필요
+        return new PostDetailResponseDto(post);
+    }
+
+    // 4. 댓글 작성
+    @Transactional
+    public Long addComment(Long postId, CommentRequestDto requestDto, String email) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        Comment comment = Comment.builder()
+                .post(post)
+                .member(member)
+                .content(requestDto.getContent())
+                .build();
+
+        return commentRepository.save(comment).getId();
     }
 }

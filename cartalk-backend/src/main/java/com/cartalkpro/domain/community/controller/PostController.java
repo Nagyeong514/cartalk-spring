@@ -1,6 +1,8 @@
 package com.cartalkpro.domain.community.controller;
 
+import com.cartalkpro.domain.community.dto.CommentRequestDto;
 import com.cartalkpro.domain.community.dto.PostCreateRequestDto;
+import com.cartalkpro.domain.community.dto.PostDetailResponseDto;
 import com.cartalkpro.domain.community.dto.PostListResponseDto;
 import com.cartalkpro.domain.community.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -37,5 +39,20 @@ public class PostController {
 
         Long postId = postService.createPost(requestDto, email);
         return ResponseEntity.ok(postId);
+    }
+    // 3. 게시글 상세 보기
+    @GetMapping("/{id}")
+    public ResponseEntity<PostDetailResponseDto> getPostDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(postService.getPostDetail(id));
+    }
+
+    // 4. 댓글 작성
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<Long> addComment(
+            @PathVariable Long id,
+            @RequestBody CommentRequestDto requestDto) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(postService.addComment(id, requestDto, email));
     }
 }
