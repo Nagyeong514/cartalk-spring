@@ -30,8 +30,14 @@ public class Post extends BaseTimeEntity {
     private int likesCount; // 성능 최적화를 위한 반정규화 컬럼
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PostImage> images = new ArrayList<>(); //
+    private List<PostImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comments = new ArrayList<>(); //
+    private List<Comment> comments = new ArrayList<>();
+
+    // 조회수 증가 비즈니스 로직
+    public void increaseViewCount() {
+        this.viewCount += 1;
+    }
 }
+

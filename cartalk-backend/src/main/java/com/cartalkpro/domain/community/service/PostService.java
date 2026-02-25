@@ -6,6 +6,7 @@ import com.cartalkpro.domain.community.dto.PostDetailResponseDto;
 import com.cartalkpro.domain.community.dto.PostListResponseDto;
 import com.cartalkpro.domain.community.entity.Comment;
 import com.cartalkpro.domain.community.entity.Post;
+import com.cartalkpro.domain.community.repository.CommentRepository;
 import com.cartalkpro.domain.community.repository.PostRepository;
 import com.cartalkpro.domain.member.entity.Member;
 import com.cartalkpro.domain.member.repository.MemberRepository;
@@ -23,6 +24,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final CommentRepository commentRepository;
 
     // 1. 글 쓰기 로직
     public Long createPost(PostCreateRequestDto requestDto, String email) {
@@ -60,11 +62,14 @@ public class PostService {
     // 3. 게시글 상세 보기 (조회수 증가 포함)
     @Transactional
     public PostDetailResponseDto getPostDetail(Long id) {
+        // 1. 게시글 찾기
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
 
-        // TODO: 조회수 중복 증가 방지 로직은 추후 쿠키로 구현 가능합니다.
-        // post.increaseViewCount(); // 엔티티에 메서드 추가 필요
+        // 2. 조회수 증가! ✅
+        post.increaseViewCount();
+
+        // 3. DTO로 변환하여 반환
         return new PostDetailResponseDto(post);
     }
 
