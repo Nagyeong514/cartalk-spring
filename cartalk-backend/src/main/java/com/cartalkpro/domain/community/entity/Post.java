@@ -39,5 +39,16 @@ public class Post extends BaseTimeEntity {
     public void increaseViewCount() {
         this.viewCount += 1;
     }
+
+    // 좋아요 수도 엔티티가 스스로 관리
+    public void increaseLikesCount() {
+        this.likesCount += 1;
+    }
+
+    public void decreaseLikesCount() {
+        if (this.likesCount > 0) {
+            this.likesCount -= 1;
+        }
+    }
 }
 

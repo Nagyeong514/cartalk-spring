@@ -1,6 +1,7 @@
 package com.cartalkpro.domain.community.dto;
 
 import com.cartalkpro.domain.community.entity.Post;
+import com.cartalkpro.global.util.TimeUtils;    //"몇시간 전"
 import lombok.Getter;
 
 @Getter
@@ -23,5 +24,6 @@ public class PostListResponseDto {
         this.likesCount = post.getLikesCount();
         this.commentCount = post.getComments().size(); // 댓글 수 계산
         this.createdAt = post.getCreatedAt().toString();
+        this.createdAt = TimeUtils.formatRelativeTime(post.getCreatedAt()); // "몇시간 전"
     }
 }
