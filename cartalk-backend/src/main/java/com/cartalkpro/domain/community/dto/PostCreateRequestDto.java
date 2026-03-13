@@ -11,6 +11,7 @@ public class PostCreateRequestDto {
     private String category;
     private String title;
     private String content;
+    private String carTag;  //차량 태그
 
     // ✅ DTO에 담긴 데이터를 DB에 저장할 'Post' 객체로 변환하는 핵심 로직입니다!
     public Post toEntity(Member member) {

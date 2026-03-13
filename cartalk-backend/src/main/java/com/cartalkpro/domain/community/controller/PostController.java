@@ -1,9 +1,6 @@
 package com.cartalkpro.domain.community.controller;
 
-import com.cartalkpro.domain.community.dto.CommentRequestDto;
-import com.cartalkpro.domain.community.dto.PostCreateRequestDto;
-import com.cartalkpro.domain.community.dto.PostDetailResponseDto;
-import com.cartalkpro.domain.community.dto.PostListResponseDto;
+import com.cartalkpro.domain.community.dto.*;
 import com.cartalkpro.domain.community.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +40,7 @@ public class PostController {
 //        return ResponseEntity.ok(postId);
 //    }
 
-    // 2. 게시글 작성 (이미지 포함하자)
+    // 2. 게시글 작성 (5. 이미지 포함하자)
     @PostMapping
     public ResponseEntity<Long> createPost(
             @RequestPart("requestDto") PostCreateRequestDto requestDto, // ✅ JSON 데이터
@@ -72,4 +69,19 @@ public class PostController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(postService.addComment(id, requestDto, email));
     }
+
+    // 6. 인기 게시글 상위 5개 가져오기
+    // GET http://localhost:8080/api/community/posts/trending
+    @GetMapping("/trending")
+    public ResponseEntity<List<PostListResponseDto>> getTrendingPosts() {
+        return ResponseEntity.ok(postService.getTrendingPosts());
+    }
+
+    // 7. 커뮤니티 상단 통계 조회
+    @GetMapping("/stats")
+    public ResponseEntity<CommunityStatsResponseDto> getStats() {
+        return ResponseEntity.ok(postService.getCommunityStats());
+    }
+
+
 }

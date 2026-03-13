@@ -26,31 +26,39 @@ public class Post extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    private int viewCount;
-    private int likesCount; // 성능 최적화를 위한 반정규화 컬럼
+    // ✅ [수정 포인트] @Builder.Default를 붙여야 빌더로 객체를 만들 때도 0으로 시작합니다.
+    @Builder.Default
+    private int viewCount = 0;
+
+    @Builder.Default
+    private int likesCount = 0; // 성능 최적화를 위한 반정규화 컬럼
+
+    private String carTag;   // 태그 추가
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default // ✅ 빌더로 객체를 만들 때도 new ArrayList<>() 초기화를 유지합니다.
+    @Builder.Default
     private List<PostImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default // ✅ 리스트가 null이 되어 발생하는 에러(NPE)를 원천 차단합니다!
+    @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
-    // 조회수 증가 비즈니스 로직
+    // ─── 비즈니스 로직 (엔티티가 스스로 데이터를 관리하게 합니다) ───
+
+    // 조회수 증가
     public void increaseViewCount() {
-        this.viewCount ++;
+        this.viewCount++;
     }
 
-    // 좋아요 수도 엔티티가 스스로 관리
+    // 좋아요 증가
     public void increaseLikesCount() {
         this.likesCount += 1;
     }
 
+    // 좋아요 취소
     public void decreaseLikesCount() {
         if (this.likesCount > 0) {
             this.likesCount -= 1;
         }
     }
 }
-

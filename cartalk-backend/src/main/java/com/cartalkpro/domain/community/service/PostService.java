@@ -1,9 +1,6 @@
 package com.cartalkpro.domain.community.service;
 
-import com.cartalkpro.domain.community.dto.CommentRequestDto;
-import com.cartalkpro.domain.community.dto.PostCreateRequestDto;
-import com.cartalkpro.domain.community.dto.PostDetailResponseDto;
-import com.cartalkpro.domain.community.dto.PostListResponseDto;
+import com.cartalkpro.domain.community.dto.*;
 import com.cartalkpro.domain.community.entity.Comment;
 import com.cartalkpro.domain.community.entity.Post;
 import com.cartalkpro.domain.community.entity.PostImage;
@@ -96,28 +93,52 @@ public class PostService {
     }
 
     //5. 이미지 파일 업로드
+    // PostService.java 5번 메서드 수정 버전
     @Transactional
     public Long createPost(PostCreateRequestDto requestDto, List<MultipartFile> images, String email) throws IOException {
-        // 1. 회원 찾기 및 게시글 생성 (기존 로직)
         Member member = memberRepository.findByEmail(email).orElseThrow();
-        Post post = requestDto.toEntity(member);
 
-        // 2. 이미지 파일 처리 ✅
+        // ✅ toEntity 대신 직접 Builder 사용 (likesCount, viewCount 초기화 포함)
+        Post post = Post.builder()
+                .member(member)
+                .category(requestDto.getCategory())
+                .carTag(requestDto.getCarTag()) // 우리가 추가한 태그!
+                .title(requestDto.getTitle())
+                .content(requestDto.getContent())
+                .build();
+
         if (images != null && !images.isEmpty()) {
             for (MultipartFile image : images) {
                 String storeFilename = fileService.storeFile(image);
-
-                // PostImage 엔티티 생성 및 연관관계 설정
                 PostImage postImage = PostImage.builder()
                         .post(post)
-                        .imageUrl("/images/" + storeFilename) // 접근용 URL
+                        .imageUrl("/images/" + storeFilename)
                         .originName(image.getOriginalFilename())
                         .build();
-
-                post.getImages().add(postImage); // Post 엔티티의 리스트에 추가
+                post.getImages().add(postImage);
             }
         }
 
         return postRepository.save(post).getId();
+    }
+
+    // 6. 인기글 가져오기
+    @Transactional(readOnly = true)
+    public List<PostListResponseDto> getTrendingPosts() {
+        // 1. 저장소에서 인기글 5개를 가져옵니다.
+        List<Post> trendingPosts = postRepository.findTop5ByOrderByLikesCountDesc();
+
+        // 2. 엔티티 리스트를 DTO 리스트로 변환해서 돌려줍니다.
+        return trendingPosts.stream()
+                .map(PostListResponseDto::new)
+                .toList();
+    }
+
+    // 7. 커뮤니티 상단 통계 조회
+    @Transactional(readOnly = true)
+    public CommunityStatsResponseDto getCommunityStats() {
+        long postCount = postRepository.count();
+        long memberCount = memberRepository.count();
+        return new CommunityStatsResponseDto(postCount, memberCount);
     }
 }
