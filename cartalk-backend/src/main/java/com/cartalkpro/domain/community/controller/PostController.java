@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 import java.util.List;
 
@@ -30,16 +32,31 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
-    // ✍2. 게시글 작성 (로그인 필수)
+    // 2. 게시글 작성 (로그인 필수)
     // POST http://localhost:8080/api/community/posts
+//    @PostMapping
+//    public ResponseEntity<Long> createPost(@RequestBody PostCreateRequestDto requestDto) {
+//        // ✅ [핵심] 보안 필터를 통과한 사용자의 이메일을 꺼내옵니다.
+//        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+//
+//        Long postId = postService.createPost(requestDto, email);
+//        return ResponseEntity.ok(postId);
+//    }
+
+    // 2. 게시글 작성 (이미지 포함하자)
     @PostMapping
-    public ResponseEntity<Long> createPost(@RequestBody PostCreateRequestDto requestDto) {
-        // ✅ [핵심] 보안 필터를 통과한 사용자의 이메일을 꺼내옵니다.
+    public ResponseEntity<Long> createPost(
+            @RequestPart("requestDto") PostCreateRequestDto requestDto, // ✅ JSON 데이터
+            @RequestPart(value = "images", required = false) List<MultipartFile> images // ✅ 이미지 파일들
+    ) throws IOException { // ✅ 파일 입출력 예외 처리
+
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Long postId = postService.createPost(requestDto, email);
+        // 서비스의 '이미지 포함 버전' createPost를 호출합니다!
+        Long postId = postService.createPost(requestDto, images, email);
         return ResponseEntity.ok(postId);
     }
+
     // 3. 게시글 상세 보기
     @GetMapping("/{id}")
     public ResponseEntity<PostDetailResponseDto> getPostDetail(@PathVariable Long id) {

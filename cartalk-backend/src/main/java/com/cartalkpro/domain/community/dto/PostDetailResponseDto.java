@@ -1,6 +1,7 @@
 package com.cartalkpro.domain.community.dto;
 
 import com.cartalkpro.domain.community.entity.Post;
+import com.cartalkpro.global.util.TimeUtils;
 import lombok.Getter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,7 +26,7 @@ public class PostDetailResponseDto {
         this.authorName = post.getMember().getName();
         this.viewCount = post.getViewCount();
         this.likesCount = post.getLikesCount();
-        this.createdAt = post.getCreatedAt().toString();
+        this.createdAt = TimeUtils.formatRelativeTime(post.getCreatedAt());
         this.comments = post.getComments().stream()
                 .map(CommentResponseDto::new)
                 .collect(Collectors.toList());

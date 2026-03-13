@@ -6,13 +6,17 @@ import com.cartalkpro.domain.community.dto.PostDetailResponseDto;
 import com.cartalkpro.domain.community.dto.PostListResponseDto;
 import com.cartalkpro.domain.community.entity.Comment;
 import com.cartalkpro.domain.community.entity.Post;
+import com.cartalkpro.domain.community.entity.PostImage;
 import com.cartalkpro.domain.community.repository.CommentRepository;
 import com.cartalkpro.domain.community.repository.PostRepository;
 import com.cartalkpro.domain.member.entity.Member;
 import com.cartalkpro.domain.member.repository.MemberRepository;
+import com.cartalkpro.global.util.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +29,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final CommentRepository commentRepository;
+    private final FileService fileService;
 
     // 1. 글 쓰기 로직
     public Long createPost(PostCreateRequestDto requestDto, String email) {
@@ -88,5 +93,31 @@ public class PostService {
                 .build();
 
         return commentRepository.save(comment).getId();
+    }
+
+    //5. 이미지 파일 업로드
+    @Transactional
+    public Long createPost(PostCreateRequestDto requestDto, List<MultipartFile> images, String email) throws IOException {
+        // 1. 회원 찾기 및 게시글 생성 (기존 로직)
+        Member member = memberRepository.findByEmail(email).orElseThrow();
+        Post post = requestDto.toEntity(member);
+
+        // 2. 이미지 파일 처리 ✅
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile image : images) {
+                String storeFilename = fileService.storeFile(image);
+
+                // PostImage 엔티티 생성 및 연관관계 설정
+                PostImage postImage = PostImage.builder()
+                        .post(post)
+                        .imageUrl("/images/" + storeFilename) // 접근용 URL
+                        .originName(image.getOriginalFilename())
+                        .build();
+
+                post.getImages().add(postImage); // Post 엔티티의 리스트에 추가
+            }
+        }
+
+        return postRepository.save(post).getId();
     }
 }

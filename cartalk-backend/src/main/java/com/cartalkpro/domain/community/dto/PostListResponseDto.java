@@ -23,7 +23,6 @@ public class PostListResponseDto {
         this.viewCount = post.getViewCount();
         this.likesCount = post.getLikesCount();
         this.commentCount = post.getComments().size(); // 댓글 수 계산
-        this.createdAt = post.getCreatedAt().toString();
         this.createdAt = TimeUtils.formatRelativeTime(post.getCreatedAt()); // "몇시간 전"
     }
 }

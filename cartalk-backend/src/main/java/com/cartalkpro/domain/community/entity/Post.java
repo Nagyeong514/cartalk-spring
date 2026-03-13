@@ -30,14 +30,16 @@ public class Post extends BaseTimeEntity {
     private int likesCount; // 성능 최적화를 위한 반정규화 컬럼
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default // ✅ 빌더로 객체를 만들 때도 new ArrayList<>() 초기화를 유지합니다.
     private List<PostImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default // ✅ 리스트가 null이 되어 발생하는 에러(NPE)를 원천 차단합니다!
     private List<Comment> comments = new ArrayList<>();
 
     // 조회수 증가 비즈니스 로직
     public void increaseViewCount() {
-        this.viewCount += 1;
+        this.viewCount ++;
     }
 
     // 좋아요 수도 엔티티가 스스로 관리
