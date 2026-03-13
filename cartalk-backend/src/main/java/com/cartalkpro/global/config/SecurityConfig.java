@@ -40,7 +40,17 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
+                        // ✅ 1. 브라우저의 '예비 요청(OPTIONS)'을 무조건 허용합니다. (CORS 해결의 핵심!)
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // ✅ 2. 회원가입, 로그인 경로는 당연히 허용
                         .requestMatchers("/api/member/signup", "/api/member/login").permitAll()
+
+                        // ✅ 3. 커뮤니티 목록 조회, 게시글 상세, 이미지 보기는 로그인 안 해도 볼 수 있게 허용
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/community/posts/**").permitAll()
+                        .requestMatchers("/images/**").permitAll()
+
+                        // 나머지는 로그인(JWT)이 필요함
                         .anyRequest().authenticated()
                 )
 
