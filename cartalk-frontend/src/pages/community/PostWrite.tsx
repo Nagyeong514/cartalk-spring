@@ -1,37 +1,29 @@
 import { useState, useRef, useCallback, type DragEvent, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Car,
-  ImagePlus,
-  X,
-  Upload,
-  ChevronDown,
-  Hash,
-  Type,
-  AlignLeft,
-  Send,
+  Car, ImagePlus, X, Upload, ChevronDown, Hash, Type, AlignLeft, Send
 } from "lucide-react";
+
+// ✅ 진짜 서버로 데이터를 보내줄 API 트럭 가져오기
+import { createPost } from "../../api/community";
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 interface ImagePreview {
   id: string;
   url: string;
   name: string;
+  file: File; // ✅ 서버에 전송할 진짜 파일 객체 추가
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { value: "maintenance", label: "정비/수리" },
-  { value: "tuning", label: "튜닝" },
-  { value: "showcase", label: "내 차 자랑" },
-  { value: "qna", label: "질문/답변" },
+  { value: "정비/수리", label: "정비/수리" },
+  { value: "튜닝", label: "튜닝" },
+  { value: "내 차 자랑", label: "내 차 자랑" },
+  { value: "질문/답변", label: "질문/답변" },
 ] as const;
 
-const SUGGESTED_TAGS = [
-  "BMW", "Tesla", "AvanteN", "GV70", "K5", "Sonata", "Grandeur", "EV6", "IONIQ5", "ModelY",
-] as const;
-
-// ─── Sub-Components ─────────────────────────────────────────────────────────────
+// ─── Sub-Components (디자인 유지) ──────────────────────────────────────────────────
 
 function CategorySelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -40,8 +32,7 @@ function CategorySelector({ value, onChange }: { value: string; onChange: (v: st
   return (
     <div className="relative">
       <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-        <Car className="h-4 w-4 text-primary" />
-        Category
+        <Car className="h-4 w-4 text-primary" /> Category
       </label>
       <button
         type="button"
@@ -98,7 +89,7 @@ function TagInput({ tags, onAdd, onRemove }: { tags: string[]; onAdd: (tag: stri
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAdd())}
-          placeholder="Type a car model..."
+          placeholder="Type a car model... (e.g. AvanteN)"
           className="flex-1 rounded-xl border border-border bg-secondary px-4 py-3 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
         />
         <button type="button" onClick={handleAdd} className="rounded-xl bg-primary/15 px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/25">Add</button>
@@ -107,84 +98,10 @@ function TagInput({ tags, onAdd, onRemove }: { tags: string[]; onAdd: (tag: stri
   );
 }
 
-function TitleInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <div>
-      <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground"><Type className="h-4 w-4 text-primary" />Title</label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Write a clear and engaging title..."
-        className="w-full rounded-xl border border-border bg-secondary px-4 py-4 text-lg font-bold text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
-        maxLength={100}
-      />
-    </div>
-  );
-}
+// ... TitleInput, ContentTextarea, ImageUploadZone 컴포넌트들은 나경님의 원본 코드와 동일하여 생략 (파일 복사시 그대로 유지하세요)
 
-function ContentTextarea({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    onChange(e.target.value);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.max(200, textareaRef.current.scrollHeight)}px`;
-    }
-  };
+// ─── Main Page (실제 로직 통합) ──────────────────────────────────────────────────
 
-  return (
-    <div>
-      <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground"><AlignLeft className="h-4 w-4 text-primary" />Content</label>
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={handleChange}
-        placeholder="Share your story..."
-        className="w-full resize-none rounded-xl border border-border bg-secondary px-4 py-4 text-sm leading-relaxed text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
-        style={{ minHeight: 200 }}
-      />
-    </div>
-  );
-}
-
-function ImageUploadZone({ images, onAdd, onRemove }: { images: ImagePreview[]; onAdd: (files: FileList) => void; onRemove: (id: string) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const handleDrag = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); }, []);
-  const handleDrop = useCallback((e: DragEvent) => {
-    e.preventDefault(); e.stopPropagation(); setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) onAdd(e.dataTransfer.files);
-  }, [onAdd]);
-
-  return (
-    <div>
-      <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground"><ImagePlus className="h-4 w-4 text-primary" />Images</label>
-      <div
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all ${isDragging ? "border-primary bg-primary/5" : "border-border bg-secondary hover:border-primary/40"}`}
-      >
-        <Upload className="mb-3 h-8 w-8 text-muted-foreground" />
-        <p className="text-sm font-medium text-foreground">Drag & drop images here</p>
-        <input ref={inputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files && onAdd(e.target.files)} />
-      </div>
-      {images.length > 0 && (
-        <div className="mt-4 grid grid-cols-3 gap-3">
-          {images.map((img) => (
-            <div key={img.id} className="group relative aspect-square overflow-hidden rounded-xl border border-border">
-              <img src={img.url} alt={img.name} className="h-full w-full object-cover" />
-              <button type="button" onClick={() => onRemove(img.id)} className="absolute top-1 right-1 bg-background/80 rounded-full p-1 opacity-0 group-hover:opacity-100"><X className="h-3 w-3" /></button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Main Page ──────────────────────────────────────────────────────────────────
 export default function CommunityPostWrite() {
   const navigate = useNavigate();
   const [category, setCategory] = useState("");
@@ -192,13 +109,21 @@ export default function CommunityPostWrite() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<ImagePreview[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false); // ✅ 제출 중 중복 클릭 방지
 
   const addTag = (tag: string) => { if (!tags.includes(tag)) setTags([...tags, tag]); };
   const removeTag = (tag: string) => { setTags(tags.filter((t) => t !== tag)); };
+
   const addImages = (files: FileList) => {
-    const newImages = Array.from(files).map((file) => ({ id: `${Date.now()}-${file.name}`, url: URL.createObjectURL(file), name: file.name }));
+    const newImages = Array.from(files).map((file) => ({
+      id: `${Date.now()}-${file.name}`,
+      url: URL.createObjectURL(file),
+      name: file.name,
+      file: file // ✅ 서버 전송용 원본 파일 보관
+    }));
     setImages((prev) => [...prev, ...newImages]);
   };
+
   const removeImage = (id: string) => {
     setImages((prev) => {
       const removed = prev.find((img) => img.id === id);
@@ -208,7 +133,47 @@ export default function CommunityPostWrite() {
   };
 
   const isValid = category && title.trim().length > 0 && content.trim().length > 0;
-  const handleSubmit = () => { if (isValid) navigate("/community"); };
+
+  // 🚀 [진짜 제출 로직] 백엔드로 전송
+  const handleSubmit = async () => {
+    if (!isValid || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    // 📦 1. Multipart/form-data 주머니 만들기
+    const formData = new FormData();
+
+    // 📦 2. 게시글 메타데이터(JSON) 준비
+    const requestDto = {
+      title,
+      content,
+      category,
+      carTag: tags.join(","), // ✅ 여러 태그를 "BMW,K5" 처럼 쉼표로 합침
+    };
+
+    // 📦 3. JSON 데이터를 Blob 형태로 주머니에 넣기 (백엔드 @RequestPart와 짝꿍)
+    formData.append(
+      "requestDto",
+      new Blob([JSON.stringify(requestDto)], { type: "application/json" })
+    );
+
+    // 📦 4. 이미지 파일들을 주머니에 넣기
+    images.forEach((img) => {
+      formData.append("images", img.file);
+    });
+
+    try {
+      // 🚚 5. 서버로 트럭 출발!
+      const postId = await createPost(formData);
+      alert("게시글이 성공적으로 등록되었습니다! 🏎️💨");
+      navigate(`/community`); // 목록으로 이동하거나 상세페이지로 이동
+    } catch (error) {
+      console.error("제출 실패:", error);
+      alert("글 등록 중 문제가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground dark">
@@ -218,17 +183,22 @@ export default function CommunityPostWrite() {
           <TagInput tags={tags} onAdd={addTag} onRemove={removeTag} />
           <div className="border-t border-border" />
           <TitleInput value={title} onChange={setTitle} />
+          {/* ContentTextarea 컴포넌트 호출 */}
           <ContentTextarea value={content} onChange={setContent} />
+          {/* ImageUploadZone 컴포넌트 호출 */}
           <ImageUploadZone images={images} onAdd={addImages} onRemove={removeImage} />
+
           <div className="border-t border-border" />
           <div className="flex items-center justify-end gap-3">
-            <Link to="/community" className="rounded-xl border border-border bg-secondary px-6 py-3 text-sm font-semibold hover:bg-accent">Cancel</Link>
+            <Link to="/community" className="rounded-xl border border-border bg-secondary px-6 py-3 text-sm font-semibold hover:bg-accent">
+              Cancel
+            </Link>
             <button
               onClick={handleSubmit}
-              disabled={!isValid}
+              disabled={!isValid || isSubmitting}
               className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
             >
-              <Send className="h-4 w-4" />Submit Post
+              {isSubmitting ? "Uploading..." : <><Send className="h-4 w-4" />Submit Post</>}
             </button>
           </div>
         </div>

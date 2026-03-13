@@ -19,3 +19,13 @@ export const getPosts = async (category?: string) => {
   });
   return response.data;
 };
+
+// 🚚 게시글 작성 (이미지 포함)
+export const createPost = async (formData: FormData) => {
+  const response = await apiClient.post('/api/community/posts', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data', // ✅ 파일을 보낼 때 필수 설정!
+    },
+  });
+  return response.data;
+};
