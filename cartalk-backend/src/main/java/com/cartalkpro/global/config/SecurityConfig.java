@@ -4,6 +4,7 @@ import com.cartalkpro.global.util.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -34,45 +35,40 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                // 1. 통합된 CORS 설정을 적용합니다.
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ 1. 브라우저의 '예비 요청(OPTIONS)'을 무조건 허용합니다. (CORS 해결의 핵심!)
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        // 1. OPTIONS 예비 요청 무조건 허용
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // ✅ 2. 회원가입, 로그인 경로는 당연히 허용
+                        // 2. 로그인, 회원가입 허용
                         .requestMatchers("/api/member/signup", "/api/member/login").permitAll()
 
-                        // ✅ 3. 커뮤니티 목록 조회, 게시글 상세, 이미지 보기는 로그인 안 해도 볼 수 있게 허용
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/community/posts/**").permitAll()
+                        // ✅ 3. 커뮤니티 목록 및 상세 조회 허용 (패턴 수정)
+                        // 'GET' 방식이면서 아래 주소로 시작하는 모든 요청을 로그인 없이 허용합니다.
+                        .requestMatchers(HttpMethod.GET, "/api/community/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/community/posts").permitAll()
+
+                        // 4. 이미지 경로 허용
                         .requestMatchers("/images/**").permitAll()
 
                         // 나머지는 로그인(JWT)이 필요함
                         .anyRequest().authenticated()
                 )
-
-                // 2. JWT 인증 필터를 보안 흐름 앞에 끼워넣습니다.
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // 모든 CORS 정책을 여기서 집중 관리합니다.
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
-        // 5173 포트 허용 및 실제 인증 정보(Credentials) 공유 설정
         config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // JWT 통신을 위해 Authorization 헤더를 명시적으로 허용하는 것이 핵심입니다.
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // Authorization 헤더를 허용해야 JWT 토큰을 인식할 수 있습니다.
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
         config.setAllowCredentials(true);
-        config.setMaxAge(3600L); // 프리플라이트 요청 캐싱 시간 (1시간)
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

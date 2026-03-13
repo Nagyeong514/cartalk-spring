@@ -141,4 +141,18 @@ public class PostService {
         long memberCount = memberRepository.count();
         return new CommunityStatsResponseDto(postCount, memberCount);
     }
+
+    //8. 좋아요 추가
+    @Transactional // ✅ 데이터가 바뀌어야 하니까 꼭 붙여주세요!
+    public int addLike(Long postId) {
+        // 1. 게시글 찾기
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
+
+        // 2. 좋아요 수 증가
+        post.setLikesCount(post.getLikesCount() + 1);
+
+        // 3. 바뀐 숫자 돌려주기 (프론트엔드 화면 업데이트용)
+        return post.getLikesCount();
+    }
 }

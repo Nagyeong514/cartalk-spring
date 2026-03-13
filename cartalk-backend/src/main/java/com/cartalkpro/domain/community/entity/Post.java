@@ -9,10 +9,12 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Post extends BaseTimeEntity {
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -26,14 +28,14 @@ public class Post extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    // ✅ [수정 포인트] @Builder.Default를 붙여야 빌더로 객체를 만들 때도 0으로 시작합니다.
+    private String carTag;   // 태그
+
+    // ✅ [수정] 중복되던 likesCount를 하나로 합치고 기본값을 설정합니다.
+    @Builder.Default
+    private int likesCount = 0;
+
     @Builder.Default
     private int viewCount = 0;
-
-    @Builder.Default
-    private int likesCount = 0; // 성능 최적화를 위한 반정규화 컬럼
-
-    private String carTag;   // 태그 추가
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -43,7 +45,7 @@ public class Post extends BaseTimeEntity {
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
 
-    // ─── 비즈니스 로직 (엔티티가 스스로 데이터를 관리하게 합니다) ───
+    // ─── 비즈니스 로직 (Setter 대신 이걸 쓰는 게 더 멋진 자바 개발자 스타일!) ───
 
     // 조회수 증가
     public void increaseViewCount() {
