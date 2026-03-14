@@ -1,5 +1,6 @@
 package com.cartalkpro.domain.community.entity;
 
+import com.cartalkpro.domain.community.dto.PostUpdateRequestDto;
 import com.cartalkpro.domain.member.entity.Member;
 import com.cartalkpro.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
@@ -62,5 +63,14 @@ public class Post extends BaseTimeEntity {
         if (this.likesCount > 0) {
             this.likesCount -= 1;
         }
+    }
+
+    // 포스트 수정
+    // Post 엔티티 내부에 추가
+    public void update(PostUpdateRequestDto requestDto) {
+        this.title = requestDto.getTitle();
+        this.content = requestDto.getContent();
+        this.category = requestDto.getCategory();
+        this.carTag = requestDto.getCarTag();
     }
 }

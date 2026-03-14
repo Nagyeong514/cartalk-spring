@@ -69,4 +69,5 @@ public class PostController {
     public ResponseEntity<CommunityStatsResponseDto> getStats() {
         return ResponseEntity.ok(postService.getCommunityStats());
     }
+
 }

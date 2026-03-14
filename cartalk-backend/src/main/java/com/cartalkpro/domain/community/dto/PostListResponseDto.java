@@ -17,6 +17,7 @@ public class PostListResponseDto {
     private String carTag;   // 차량 태그
     private String preview;  // 본문 요약
     private boolean isHot;      // HOT 배지
+    private String imageUrl;
 
 
     public PostListResponseDto(Post post) {
@@ -38,5 +39,10 @@ public class PostListResponseDto {
         this.viewCount = post.getViewCount();
 
         this.isHot = post.getLikesCount() >= 10; // 좋아요 10개 이상이면 HOT!
+
+        // 첫 번째 이미지가 있다면 썸네일 경로로 지정
+        if (post.getImages() != null && !post.getImages().isEmpty()) {
+            this.imageUrl = post.getImages().get(0).getImageUrl();
+        }
     }
 }

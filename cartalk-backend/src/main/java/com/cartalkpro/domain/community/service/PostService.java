@@ -135,13 +135,6 @@ public class PostService {
                 .toList();
     }
 
-    // 7. 커뮤니티 상단 통계 조회
-    @Transactional(readOnly = true)
-    public CommunityStatsResponseDto getCommunityStats() {
-        long postCount = postRepository.count();
-        long memberCount = memberRepository.count();
-        return new CommunityStatsResponseDto(postCount, memberCount);
-    }
 
     //8. 좋아요 추가
     @Transactional // ✅ 데이터가 바뀌어야 하니까 꼭 붙여주세요!
@@ -156,4 +149,34 @@ public class PostService {
         // 3. 바뀐 숫자 돌려주기 (프론트엔드 화면 업데이트용)
         return post.getLikesCount();
     }
+
+
+    @Transactional(readOnly = true)
+    public CommunityStatsResponseDto getCommunityStats() {
+        java.time.LocalDateTime startOfToday = java.time.LocalDate.now().atStartOfDay();
+
+        // 1. 기본 카운트
+        long totalPosts = postRepository.count();
+        long totalMembers = memberRepository.count();
+        long postsToday = postRepository.countByCreatedAtAfter(startOfToday);
+
+        // 2. 태그 모으기 (DB를 새로 안 파는 방법!)
+        // 모든 게시글의 carTag를 가져와서 쉼표로 자르고 중복 제거
+        java.util.Set<String> tagSet = new java.util.HashSet<>();
+        postRepository.findAll().forEach(post -> {
+            if (post.getCarTag() != null && !post.getCarTag().isEmpty()) {
+                String[] tags = post.getCarTag().split(",");
+                for (String t : tags) tagSet.add(t.trim());
+            }
+        });
+
+        return CommunityStatsResponseDto.builder()
+                .totalPosts(totalPosts)
+                .postsToday(postsToday)
+                .totalMembers(totalMembers)
+                .memberGrowth(8.2) // 계산 로직은 나중에 붙여도 일단 8.2로 고정!
+                .uniqueTagsCount(tagSet.size())
+                .build();
+    }
+
 }

@@ -14,4 +14,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // 인기 게시글 상위 5개 조회
     List<Post> findTop5ByOrderByLikesCountDesc();
+
+    // 활동바: 날짜별로 개수를 세는 기능
+    long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
 }
