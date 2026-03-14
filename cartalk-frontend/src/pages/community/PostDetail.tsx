@@ -31,18 +31,18 @@ export default function PostDetail() {
   useEffect(() => { fetchDetail(); }, [id]);
 
   // ❤️ 좋아요 클릭 핸들러
-  const handleLike = async () => {
-    if (!post || isLiking) return;
-    setIsLiking(true);
-    try {
-      const updatedLikes = await addLike(post.id);
-      setPost({ ...post, likesCount: updatedLikes }); // 화면에 바로 반영
-    } catch (error) {
-      alert("로그인이 필요하거나 좋아요 처리에 실패했습니다.");
-    } finally {
-      setIsLiking(false);
-    }
-  };
+ const handleLike = async () => {
+   if (!post || isLiking) return;
+   setIsLiking(true);
+   try {
+     const updatedLikes = await addLike(post.id); // 이제 백엔드에서 '숫자'가 옵니다.
+     setPost({ ...post, likesCount: updatedLikes }); // 숫자가 상태에 저장되어 화면에 보입니다.
+   } catch (error) {
+     alert("좋아요 처리에 실패했습니다.");
+   } finally {
+     setIsLiking(false);
+   }
+ };
 
   // 💬 댓글 전송 핸들러
   const handleCommentSubmit = async () => {

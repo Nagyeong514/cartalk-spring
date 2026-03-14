@@ -69,13 +69,4 @@ public class PostController {
     public ResponseEntity<CommunityStatsResponseDto> getStats() {
         return ResponseEntity.ok(postService.getCommunityStats());
     }
-    // PostController.java 안에 추가
-
-    // 8. 게시글 좋아요 클릭
-    @PostMapping("/{id}/like")
-    public ResponseEntity<Integer> addLike(@PathVariable(name = "id") Long id) {
-        // 세션에서 사용자 정보를 가져올 수도 있지만, 일단 단순 숫자를 올리는 로직이라 가정합니다.
-        int updatedLikes = postService.addLike(id);
-        return ResponseEntity.ok(updatedLikes);
-    }
 }

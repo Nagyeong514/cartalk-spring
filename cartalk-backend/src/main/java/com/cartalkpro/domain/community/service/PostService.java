@@ -50,14 +50,15 @@ public class PostService {
     public List<PostListResponseDto> getPosts(String category) {
         List<Post> posts;
 
+        // 전체 카테고리 요청 시 정렬 메서드 사용
         if (category == null || category.equals("전체")) {
-            posts = postRepository.findAll(); // 전체 조회
+            posts = postRepository.findAllByOrderByCreatedAtDesc();
         } else {
-            posts = postRepository.findAllByCategoryOrderByCreatedAtDesc(category); // 카테고리 필터링
+            posts = postRepository.findAllByCategoryOrderByCreatedAtDesc(category);
         }
 
         return posts.stream()
-                .map(PostListResponseDto::new) // 엔티티를 DTO 가방에 담기
+                .map(PostListResponseDto::new)
                 .collect(Collectors.toList());
     }
 
@@ -150,7 +151,7 @@ public class PostService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
 
         // 2. 좋아요 수 증가
-        post.setLikesCount(post.getLikesCount() + 1);
+        post.increaseLikesCount();
 
         // 3. 바뀐 숫자 돌려주기 (프론트엔드 화면 업데이트용)
         return post.getLikesCount();
