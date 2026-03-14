@@ -23,7 +23,15 @@ export default function CommunityPostList() {
   const [activeCategory, setActiveCategory] = useState<string>("전체");
   const [posts, setPosts] = useState<PostListResponse[]>([]);
   const [trendingPosts, setTrendingPosts] = useState<PostListResponse[]>([]);
-  const [stats, setStats] = useState({ totalPosts: 0, totalMembers: 0 });
+  // ✅ [수정] 초기값을 0으로 꽉 채워줍니다. (하얀 화면 방지 핵심!)
+    const [stats, setStats] = useState<CommunityStatsResponse>({
+      totalPosts: 0,
+      postsToday: 0,
+      totalMembers: 0,
+      memberGrowth: 0,
+      uniqueTagsCount: 0
+    });
+
   const [isLoading, setIsLoading] = useState(true);
 
   // 🚚 서버에서 모든 데이터를 싣고 옵니다.
@@ -49,12 +57,30 @@ export default function CommunityPostList() {
     fetchAllData();
   }, [activeCategory]);
 
-  // 상단 통계 카드 데이터 매핑 (진짜 데이터 + 더미 데이터 혼합)
+// ✅ [수정] 데이터가 없을 때를 대비해 || 0 안전장치를 추가합니다.
   const statCards: StatCardData[] = [
     { label: "Daily Visitors", value: "12,847", change: "+12.5%", icon: <Eye className="h-5 w-5" />, color: "text-cartalk-cyan" },
-    { label: "Active Users", value: stats.totalMembers.toLocaleString(), change: "+8.2%", icon: <Users className="h-5 w-5" />, color: "text-cartalk-emerald" },
-    { label: "Total Posts", value: stats.totalPosts.toLocaleString(), change: "+324", icon: <FileText className="h-5 w-5" />, color: "text-cartalk-amber" },
-    { label: "New Car Tags", value: "156", change: "+23", icon: <Tag className="h-5 w-5" />, color: "text-cartalk-rose" },
+    {
+      label: "Active Users",
+      value: (stats.totalMembers || 0).toLocaleString(),
+      change: `+${stats.memberGrowth || 0}%`,
+      icon: <Users className="h-5 w-5" />,
+      color: "text-cartalk-emerald"
+    },
+    {
+      label: "Total Posts",
+      value: (stats.totalPosts || 0).toLocaleString(),
+      change: `+${stats.postsToday || 0}`,
+      icon: <FileText className="h-5 w-5" />,
+      color: "text-cartalk-amber"
+    },
+    {
+      label: "Car Tags",
+      value: (stats.uniqueTagsCount || 0).toLocaleString(),
+      change: "Live",
+      icon: <Tag className="h-5 w-5" />,
+      color: "text-cartalk-rose"
+    },
   ];
 
   return (
@@ -142,37 +168,65 @@ export default function CommunityPostList() {
 }
 
 // ─── PostCard 컴포넌트 ──────────────────────────────────────────────────────────
-
 function PostCard({ post }: { post: PostListResponse }) {
   return (
     <Link to={`/community/${post.id}`} className="block">
       <article className="group rounded-xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:bg-accent/30 cursor-pointer">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-            <Car className="h-3 w-3" />
-            #{post.carTag || "CarTalk"}
-          </span>
-          <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{post.category}</span>
-          {post.isHot && (
-            <span className="flex items-center gap-1 rounded-md bg-cartalk-rose/15 px-2 py-0.5 text-xs font-semibold text-cartalk-rose">
-              <Flame className="h-3 w-3" /> HOT
-            </span>
-          )}
-        </div>
-        <h3 className="mb-2 text-base font-bold text-foreground transition-colors group-hover:text-primary">{post.title}</h3>
-        <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{post.preview}</p>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
-              {post.authorName.charAt(0).toUpperCase()}
+
+        {/* 전체를 가로 배치 (flex-row) */}
+        <div className="flex gap-5 sm:gap-8">
+
+          {/* 1. 텍스트 영역: 남은 공간 모두 차지 (flex-1) */}
+          <div className="flex-1 min-w-0 flex flex-col justify-between">
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                  <Car className="h-3 w-3" />
+                  #{post.carTag || "CarTalk"}
+                </span>
+                <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-muted-foreground">{post.category}</span>
+                {post.isHot && (
+                  <span className="flex items-center gap-1 rounded-md bg-cartalk-rose/15 px-2 py-0.5 text-xs font-semibold text-cartalk-rose">
+                    <Flame className="h-3 w-3" /> HOT
+                  </span>
+                )}
+              </div>
+              <h3 className="mb-2 text-base sm:text-lg font-bold text-foreground transition-colors group-hover:text-primary line-clamp-1">
+                {post.title}
+              </h3>
+              <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                {post.preview}
+              </p>
             </div>
-            <span className="text-sm font-medium text-foreground">{post.authorName}</span>
-            <span className="text-xs text-muted-foreground">{post.createdAt}</span>
+
+            <div className="flex items-center justify-between mt-auto">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
+                  {post.authorName.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-sm font-medium text-foreground">{post.authorName}</span>
+                <span className="text-xs text-muted-foreground hidden sm:inline">{post.createdAt}</span>
+              </div>
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <span className="flex items-center gap-1 text-xs"><Heart className="h-3.5 w-3.5" />{post.likesCount}</span>
+                <span className="flex items-center gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" />{post.commentCount}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <span className="flex items-center gap-1 text-xs"><Heart className="h-3.5 w-3.5" />{post.likesCount}</span>
-            <span className="flex items-center gap-1 text-xs"><MessageCircle className="h-3.5 w-3.5" />{post.commentCount}</span>
-          </div>
+
+          {/* 2. 썸네일 영역: 사진이 있을 때만 렌더링 */}
+          {post.imageUrl && (
+            <div className="relative h-24 w-24 sm:h-32 sm:w-32 shrink-0 overflow-hidden rounded-2xl border border-white/5 bg-zinc-900 shadow-inner">
+              <img
+                src={`http://localhost:8080${post.imageUrl}`}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                alt="thumbnail"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              {/* 이미지 위에 은은한 그라데이션 오버레이 (디자인 디테일) */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          )}
         </div>
       </article>
     </Link>

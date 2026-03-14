@@ -14,6 +14,7 @@ export interface PostListResponse {
   commentCount: number;
   isHot: boolean;
   createdAt: string;
+  imageUrl?: string;
 }
 
 export interface CommentDto {
@@ -38,11 +39,14 @@ export interface PostDetailResponse {
   comments: CommentDto[];
 }
 
+// ✅ [수정] 백엔드 DTO와 필드 이름을 완벽하게 맞춥니다.
 export interface CommunityStatsResponse {
   totalPosts: number;
+  postsToday: number;      // ✅ 추가
   totalMembers: number;
+  memberGrowth: number;    // ✅ 추가
+  uniqueTagsCount: number; // ✅ 추가
 }
-
 // ─── API Functions (백엔드 컨트롤러와 번호 맞춤) ───────────────────────────────────
 
 // 1. 게시글 목록 가져오기
