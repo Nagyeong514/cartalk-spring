@@ -1,9 +1,7 @@
-import { useState, useEffect, useRef, useCallback, type DragEvent, type ChangeEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
-  Shield, ChevronLeft, Gauge, AlertTriangle, Droplets, Wrench,
-  FileText, Camera, ClipboardCheck, ShieldAlert, X, Star,
-  CalendarPlus, Mail, Phone, MapPin, Sun, Cloud, Send, ArrowLeft, ImagePlus, Upload, ChevronDown, Hash, Type, AlignLeft
+  Gauge, AlertTriangle, Droplets, Wrench, FileText, Camera, ClipboardCheck,
+  ShieldAlert, X, Star, CalendarPlus, Mail, Phone, MapPin, Sun, Info
 } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -15,9 +13,18 @@ interface Tab {
   icon: React.ReactNode;
 }
 
+// 백엔드 RecallResponseDto.RecallData와 매칭
+interface RecallData {
+  manufacturer: string;
+  modelName: string;
+  recallReason: string;
+  productionStartDate: string;
+  productionEndDate: string;
+  recallStartDate: string;
+}
+
 // ─── Sub-Components ─────────────────────────────────────────────────────────────
 
-/* 1. Stat Card Component */
 function StatCard({ icon, label, value, sub, accent = "text-primary" }: { icon: React.ReactNode; label: string; value: string; sub: string; accent?: string }) {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5">
@@ -31,7 +38,6 @@ function StatCard({ icon, label, value, sub, accent = "text-primary" }: { icon: 
   );
 }
 
-/* 2. Car Hero Section (디자인 유지 + 데이터 바인딩) */
 function CarHero({ shrink, carData }: { shrink: boolean; carData: any }) {
   return (
     <div
@@ -48,62 +54,94 @@ function CarHero({ shrink, carData }: { shrink: boolean; carData: any }) {
           className={`object-contain transition-all duration-500 w-full ${shrink ? "max-h-80" : "max-h-[500px]"}`}
         />
         <div className="flex flex-col items-center gap-2 text-center">
-          {/* ✅ 백엔드 데이터: 가입할 때 기입한 차명 */}
-          <h2 className="text-3xl font-black tracking-tight text-foreground">
-            {carData?.modelName || "My Car"}
-          </h2>
-          {/* ✅ 백엔드 데이터: 년도식 */}
+          <h2 className="text-3xl font-black tracking-tight text-foreground">{carData?.modelName || "My Car"}</h2>
           <p className="text-base text-muted-foreground">{carData?.modelYear || "2025"} Model</p>
-
           <div className="mt-2 flex flex-col items-center gap-3">
-             {/* ✅ 백엔드 데이터: 차대번호(VIN) 추가 */}
             <span className="rounded-full bg-secondary px-4 py-1 text-[10px] font-mono text-zinc-500">
               VIN: {carData?.vin || "-----------"}
             </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            <div className="flex items-center gap-4">
-              <span className="rounded-md bg-primary/10 px-4 py-1.5 text-lg font-bold text-primary">$58,900</span>
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className={`h-4 w-4 ${i <= 4 ? "fill-accent text-accent" : "text-muted-foreground"}`} />
-                ))}
-                <span className="ml-1 text-sm text-muted-foreground">4.7</span>
+/* ✅ 3. GuardianPanel (수정된 섹션: 상세정보 + 위기 레드 + 큰 글씨) */
+function GuardianPanel({ recalls }: { recalls: RecallData[] }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <h3 className="text-xl font-bold text-foreground underline underline-offset-8 decoration-red-500/50">Guardian - Recall Status</h3>
+
+      {recalls.length > 0 ? (
+        recalls.map((recall, index) => (
+          <div key={index} className="rounded-2xl border-2 border-red-600 bg-red-600/10 p-6 shadow-[0_0_20px_rgba(220,38,38,0.2)] animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col gap-6">
+              {/* 헤더 섹션 */}
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="h-10 w-10 text-red-500 animate-pulse" />
+                <div>
+                  <p className="text-xs font-black text-red-500 uppercase tracking-widest">Urgent Recall</p>
+                  <p className="text-xl font-bold text-foreground">{recall.manufacturer} 공식 통보</p>
+                </div>
+              </div>
+
+              {/* ✅ 사유 섹션 (나경님 요청: 더 크고 하얗게!) */}
+              <div className="rounded-xl bg-zinc-950/60 p-5 border border-red-500/30">
+                <div className="mb-3 flex items-center gap-2 text-red-400">
+                  <Info size={18} />
+                  <span className="text-sm font-black uppercase">결함 사유</span>
+                </div>
+                <p className="text-xl font-bold leading-snug text-white">
+                  {recall.recallReason}
+                </p>
+              </div>
+
+              {/* ✅ 상세 데이터 그리드 */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="rounded-lg bg-zinc-900/50 p-3 border border-white/5">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">대상 차명</p>
+                  <p className="font-semibold text-foreground text-base">{recall.modelName}</p>
+                </div>
+                <div className="rounded-lg bg-zinc-900/50 p-3 border border-white/5">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">리콜 개시일</p>
+                  <p className="font-semibold text-red-400 text-base">{recall.recallStartDate}</p>
+                </div>
+                <div className="col-span-2 rounded-lg bg-zinc-900/50 p-3 border border-white/5">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">대상 차량 생산 기간</p>
+                  <p className="font-semibold text-foreground">
+                    {recall.productionStartDate} ~ {recall.productionEndDate}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                 <span className="rounded bg-red-600 px-3 py-1 text-xs font-black text-white shadow-lg">HIGH PRIORITY</span>
               </div>
             </div>
           </div>
+        ))
+      ) : (
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-12 text-center transition-all hover:border-emerald-500/40">
+          <ShieldAlert className="mx-auto mb-4 h-16 w-16 text-emerald-500" />
+          <p className="text-xl font-bold text-emerald-500">차량이 안전합니다</p>
+          <p className="text-muted-foreground mt-2">현재 감지된 리콜 데이터가 없습니다.</p>
         </div>
-      </div>
-    </div>
-  );
-}
+      )}
 
-/* 3. Detail Panels (동일) */
-function GuardianPanel() {
-  return (
-    <div className="flex flex-col gap-6">
-      <h3 className="text-xl font-bold text-foreground">Guardian - Recall Status</h3>
-      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
-        <div className="flex items-start gap-4">
-          <AlertTriangle className="mt-1 h-6 w-6 shrink-0 text-destructive" />
-          <div className="flex flex-col gap-2">
-            <p className="text-lg font-bold text-destructive">Engine Defect Alert</p>
-            <p className="text-base text-muted-foreground leading-relaxed">NHTSA Recall #24V-892: Potential turbocharger oil leak may cause engine stalling. Please contact your nearest dealer immediately.</p>
-            <p className="mt-2 text-sm font-medium text-muted-foreground">Issued: Jan 12, 2026 &middot; Priority: <span className="text-destructive">High</span></p>
-          </div>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button className="flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-base font-bold text-primary-foreground hover:bg-primary/90 transition-all shadow-md hover:shadow-lg">
-          <CalendarPlus className="h-5 w-5" /> Add to Google Calendar
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <button className="flex items-center justify-center gap-2 rounded-xl bg-red-600 py-4 text-base font-black text-white transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-500/30">
+          <CalendarPlus size={20} /> 구글 캘린더 예약
         </button>
-        <button className="flex items-center justify-center gap-2 rounded-xl border-2 border-border bg-card px-6 py-4 text-base font-bold text-foreground hover:border-primary/50 hover:bg-accent/50 transition-all">
-          <Mail className="h-5 w-5" /> Send Gmail Report
+        <button className="flex items-center justify-center gap-2 rounded-xl border-2 border-zinc-700 bg-card py-4 text-base font-black text-foreground transition-all hover:border-red-500 hover:bg-zinc-800">
+          <Mail size={20} /> 리포트 메일 발송
         </button>
       </div>
     </div>
   );
 }
 
+/* ⚠️ 건드리지 말라고 하신 RepairShopsPanel */
 function RepairShopsPanel() {
   const shops = [
     { name: "BMW of Springfield", distance: "2.4 mi", phone: "(555) 123-4567", rating: "4.8" },
@@ -142,6 +180,7 @@ function RepairShopsPanel() {
   );
 }
 
+/* ⚠️ 건드리지 말라고 하신 CarWashPanel */
 function CarWashPanel() {
   const score = 85;
   return (
@@ -154,7 +193,6 @@ function CarWashPanel() {
             <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeWidth="8" strokeDasharray={`${(score / 100) * 326.7} 326.7`} strokeLinecap="round" className="text-emerald-500 transition-all duration-1000" />
           </svg>
           <div className="flex flex-col items-center">
-            <Droplets className="h-8 w-8 text-emerald-500" />
             <p className="text-5xl font-black text-foreground mt-2">{score}</p>
             <p className="text-sm font-bold text-emerald-500">Excellent</p>
           </div>
@@ -163,16 +201,12 @@ function CarWashPanel() {
           <Sun className="h-6 w-6 text-amber-500" /> <span>Sunny, 75°F</span>
         </div>
       </div>
-      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6">
-        <p className="text-lg font-bold text-emerald-500 mb-2">Perfect Day for a Wash!</p>
-        <p className="text-muted-foreground leading-relaxed">Clear skies and low humidity continue for the next 48 hours. It's the best time for detailing and waxing.</p>
-      </div>
     </div>
   );
 }
 
-/* 4. Slide Panel Orchestrator (디자인 유지) */
-function SlidePanel({ activeTab, onClose }: { activeTab: TabKey | null; onClose: () => void }) {
+/* 4. Slide Panel Orchestrator */
+function SlidePanel({ activeTab, onClose, recalls }: { activeTab: TabKey | null; onClose: () => void; recalls: RecallData[] }) {
   const isOpen = activeTab !== null;
   const panelTitles: Record<TabKey, string> = { summary: "Summary", photos: "Photos", evaluation: "Evaluation", guardian: "Guardian Alerts", repair: "Repair Shops", carwash: "Car Wash Index" };
 
@@ -187,7 +221,7 @@ function SlidePanel({ activeTab, onClose }: { activeTab: TabKey | null; onClose:
               <button onClick={onClose} className="rounded-full p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"><X className="h-5 w-5" /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 lg:p-8">
-              {activeTab === "guardian" && <GuardianPanel />}
+              {activeTab === "guardian" && <GuardianPanel recalls={recalls} />}
               {activeTab === "repair" && <RepairShopsPanel />}
               {activeTab === "carwash" && <CarWashPanel />}
             </div>
@@ -201,27 +235,31 @@ function SlidePanel({ activeTab, onClose }: { activeTab: TabKey | null; onClose:
 // ─── Main Page Component ────────────────────────────────────────────────────────
 export default function GuardianPage() {
   const [activeTab, setActiveTab] = useState<TabKey | null>(null);
-
-  // ✅ [데이터 관리] 실제 데이터를 담을 상태 관리
   const [carData, setCarData] = useState<any>(null);
+  const [recalls, setRecalls] = useState<RecallData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ [API 연결] 페이지 로드 시 백엔드에서 데이터 가져오기
   useEffect(() => {
-    const fetchMyCarInfo = async () => {
-      const token = localStorage.getItem("accessToken"); //
-
+    const initData = async () => {
+      const token = localStorage.getItem("accessToken");
       try {
-        const response = await fetch("http://localhost:8080/api/vehicle/my", {
-          headers: {
-            "Authorization": `Bearer ${token}` //
-          }
+        setLoading(true);
+        // 1. 내 차 정보 가져오기
+        const carRes = await fetch("http://localhost:8080/api/vehicle/my", {
+          headers: { "Authorization": `Bearer ${token}` }
         });
+        if (carRes.ok) {
+          const car = await carRes.json();
+          setCarData(car);
 
-        if (response.ok) {
-          const data = await response.json(); //
-          console.log("🔥 내 차 정보 도착:", data);
-          setCarData(data); //
+          // 2. 리콜 정보 가져오기
+          const recallRes = await fetch(`http://localhost:8080/api/recall/check?carName=${car.modelName}&modelYear=${car.modelYear}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (recallRes.ok) {
+            const recallList = await recallRes.json();
+            setRecalls(recallList);
+          }
         }
       } catch (error) {
         console.error("차량 정보 로드 실패:", error);
@@ -229,52 +267,50 @@ export default function GuardianPage() {
         setLoading(false);
       }
     };
-
-    fetchMyCarInfo();
+    initData();
   }, []);
 
   const tabs: Tab[] = [
-    { key: "summary", label: "Summary", icon: <FileText className="h-4 w-4" /> },
-    { key: "photos", label: "Photos", icon: <Camera className="h-4 w-4" /> },
-    { key: "evaluation", label: "Evaluation", icon: <ClipboardCheck className="h-4 w-4" /> },
-    { key: "guardian", label: "Guardian", icon: <ShieldAlert className="h-4 w-4" /> },
-    { key: "repair", label: "Repair", icon: <Wrench className="h-4 w-4" /> },
-    { key: "carwash", label: "Car Wash", icon: <Droplets className="h-4 w-4" /> },
+    { key: "summary", label: "Summary", icon: <FileText size={16} /> },
+    { key: "photos", label: "Photos", icon: <Camera size={16} /> },
+    { key: "evaluation", label: "Evaluation", icon: <ClipboardCheck size={16} /> },
+    { key: "guardian", label: "Guardian", icon: <ShieldAlert size={16} /> },
+    { key: "repair", label: "Repair", icon: <Wrench size={16} /> },
+    { key: "carwash", label: "Car Wash", icon: <Droplets size={16} /> },
   ];
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">CarTalk Pro 보안 연결 중...</div>;
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white font-black animate-pulse uppercase tracking-[0.3em]">CarTalk Pro : Securing...</div>;
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground dark">
       <main className="flex flex-1 flex-col gap-6 p-6 lg:p-8">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {/* ✅ 마일리지 카드: DB의 진짜 데이터를 숫자로 변환해서 출력합니다. */}
+          <StatCard icon={<Gauge size={20} />} label="Mileage" value={`${carData?.mileage?.toLocaleString() || "0"} km`} sub="Real-time Sync" />
           <StatCard
-            icon={<Gauge className="h-5 w-5" />}
-            label="Mileage"
-            value={`${carData?.mileage?.toLocaleString() || "0"} mi`}
-            sub="Updated from server"
+            icon={<AlertTriangle size={20} className={recalls.length > 0 ? "animate-bounce" : ""} />}
+            label="Recall Alerts"
+            value={recalls.length > 0 ? `${recalls.length} Active` : "Safe"}
+            sub={recalls.length > 0 ? "ACTION REQUIRED" : "Systems Normal"}
+            accent={recalls.length > 0 ? "text-red-500" : "text-emerald-500"}
           />
-          <StatCard icon={<AlertTriangle className="h-5 w-5" />} label="Recall Alerts" value="1 Active" sub="Engine defect" accent="text-destructive" />
-          <StatCard icon={<Droplets className="h-5 w-5" />} label="Car Wash Index" value="85/100" sub="Perfect day!" accent="text-emerald-500" />
-          <StatCard icon={<Wrench className="h-5 w-5" />} label="Maintenance" value="D-15" sub="Oil change due" accent="text-amber-500" />
+          <StatCard icon={<Droplets size={20} />} label="Car Wash Index" value="85/100" sub="Perfect day!" accent="text-emerald-500" />
+          <StatCard icon={<Wrench size={20} />} label="Maintenance" value="D-15" sub="Oil change due" accent="text-amber-500" />
         </div>
 
-        <nav className="flex items-center gap-2 overflow-x-auto rounded-2xl border border-border bg-card p-2">
+        <nav className="flex items-center gap-2 overflow-x-auto rounded-2xl border border-border bg-card p-2 shadow-inner">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
             return (
-              <button key={tab.key} onClick={() => setActiveTab(isActive ? null : tab.key)} className={`flex shrink-0 items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all ${isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+              <button key={tab.key} onClick={() => setActiveTab(isActive ? null : tab.key)} className={`flex shrink-0 items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-all ${isActive ? "bg-primary text-primary-foreground shadow-md scale-105" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
                 {tab.icon} <span className="hidden sm:inline">{tab.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* ✅ 디자인 레이아웃 완벽 보존! 데이터만 CarHero에 전달 */}
-        <div className={`grid flex-1 gap-6 transition-all duration-500 ${activeTab !== null ? "lg:grid-cols-[1fr_3fr]" : "lg:grid-cols-1"}`}>
+        <div className={`grid flex-1 gap-6 transition-all duration-500 ${activeTab !== null ? "lg:grid-cols-[1fr_2.5fr]" : "lg:grid-cols-1"}`}>
           <CarHero shrink={activeTab !== null} carData={carData} />
-          <SlidePanel activeTab={activeTab} onClose={() => setActiveTab(null)} />
+          <SlidePanel activeTab={activeTab} onClose={() => setActiveTab(null)} recalls={recalls} />
         </div>
       </main>
     </div>

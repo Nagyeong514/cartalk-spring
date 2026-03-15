@@ -52,6 +52,11 @@ public class SecurityConfig {
                         // 4. 이미지 경로 허용
                         .requestMatchers("/images/**").permitAll()
 
+                        // 5. 리콜
+                        .requestMatchers("/error").permitAll() // ✅ 이 줄을 꼭 추가하세요! : 그래야 403 뒤에 숨은 진짜 범인을 프론트에서도 확인할 수 있습니다.
+                        .requestMatchers("/api/vehicle/**").authenticated() // 내 차 정보는 로그인 필요
+                        .requestMatchers("/api/recall/**").authenticated()  // ✅ 이 줄을 추가해서 리콜 API도 허용해주세요!
+
                         // 나머지는 로그인(JWT)이 필요함
                         .anyRequest().authenticated()
                 )
