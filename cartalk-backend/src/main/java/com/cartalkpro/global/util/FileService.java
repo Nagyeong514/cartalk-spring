@@ -9,24 +9,46 @@ import java.util.UUID;
 @Service
 public class FileService {
 
-    // ✅ 파일이 저장될 경로 (프로젝트 외부에 저장하는 것이 좋습니다)
+    // ✅ 파일이 저장될 경로
     private final String uploadPath = "C:/cartalk_uploads/";
 
+    /**
+     * 파일을 서버 폴더에 저장합니다.
+     */
     public String storeFile(MultipartFile file) throws IOException {
         if (file.isEmpty()) return null;
 
-        // 1. 저장될 파일명 생성 (중복 방지를 위해 UUID 사용)
         String originalFilename = file.getOriginalFilename();
         String storeFilename = UUID.randomUUID().toString() + "_" + originalFilename;
 
-        // 2. 폴더가 없으면 생성
         File folder = new File(uploadPath);
         if (!folder.exists()) folder.mkdirs();
 
-        // 3. 실제 파일 저장
         file.transferTo(new File(uploadPath + storeFilename));
 
-        // 4. DB에 저장할 '경로' 또는 '파일명' 반환
         return storeFilename;
+    }
+
+    /**
+     * 서버 폴더에 저장된 물리 파일을 삭제합니다.
+     */
+    public void deleteFile(String storeFilename) {
+        // 1. 파일이 저장된 실제 전체 경로를 생성합니다.
+        String fullPath = uploadPath + storeFilename;
+
+        // 2. 해당 경로를 가리키는 파일 객체를 만듭니다.
+        File file = new File(fullPath);
+
+        // 3. 파일이 실제로 존재하면 삭제를 수행합니다.
+        if (file.exists()) {
+            boolean result = file.delete();
+            if (result) {
+                System.out.println("파일 삭제 성공: " + storeFilename);
+            } else {
+                System.out.println("파일 삭제 실패: " + storeFilename);
+            }
+        } else {
+            System.out.println("삭제할 파일이 존재하지 않습니다: " + storeFilename);
+        }
     }
 }

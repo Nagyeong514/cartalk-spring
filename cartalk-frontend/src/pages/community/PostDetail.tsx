@@ -1,18 +1,35 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MessageCircle, Heart, Share2, Send, X, Car, User } from "lucide-react";
+import { MessageCircle, Heart, Send, X, Edit3, Trash2 } from "lucide-react";
 
-// ✅ addLike, createComment 추가 임포트
-import { getPostDetail, PostDetailResponse, CommentDto, addLike, createComment } from "../../api/community";
+// addLike, createComment 추가 임포트
+import {
+  getPostDetail,
+  PostDetailResponse,
+  CommentDto,
+  addLike,
+  createComment,
+  deletePost
+} from "../../api/community";
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
   const [post, setPost] = useState<PostDetailResponse | null>(null);
+
+  /* * [수정] 이름표 대신 고유 번호(ID)를 가져옵니다.
+   * LoginPage에서 저장한 'memberId'를 꺼냅니다.
+   */
+  const currentMemberId = localStorage.getItem("memberId");
+
   const [isLoading, setIsLoading] = useState(true);
   const [newComment, setNewComment] = useState("");
-  const [isLiking, setIsLiking] = useState(false); // 좋아요 중복 클릭 방지
+  const [isLiking, setIsLiking] = useState(false);
+
+  /* * [핵심 변경] 본인 확인 로직
+   * 게시글의 authorId와 내 memberId를 비교합니다.
+   */
+  const isAuthor = post && Number(currentMemberId) === post.authorId;
 
   const handleClose = () => navigate("/community");
 
@@ -30,29 +47,42 @@ export default function PostDetail() {
 
   useEffect(() => { fetchDetail(); }, [id]);
 
-  // ❤️ 좋아요 클릭 핸들러
- const handleLike = async () => {
-   if (!post || isLiking) return;
-   setIsLiking(true);
-   try {
-     const updatedLikes = await addLike(post.id); // 이제 백엔드에서 '숫자'가 옵니다.
-     setPost({ ...post, likesCount: updatedLikes }); // 숫자가 상태에 저장되어 화면에 보입니다.
-   } catch (error) {
-     alert("좋아요 처리에 실패했습니다.");
-   } finally {
-     setIsLiking(false);
-   }
- };
+  const handleLike = async () => {
+    if (!post || isLiking) return;
+    setIsLiking(true);
+    try {
+      const updatedLikes = await addLike(post.id);
+      setPost({ ...post, likesCount: updatedLikes });
+    } catch (error) {
+      alert("좋아요 처리에 실패했습니다.");
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
-  // 💬 댓글 전송 핸들러
   const handleCommentSubmit = async () => {
     if (!post || !newComment.trim()) return;
     try {
       await createComment(post.id, newComment);
-      setNewComment(""); // 입력창 비우기
-      fetchDetail(); // 댓글 목록 새로고침
+      setNewComment("");
+      fetchDetail();
     } catch (error) {
       alert("댓글 등록 실패!");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!post) return;
+
+    if (window.confirm("정말로 이 게시글을 삭제하시겠습니까?\n삭제된 글은 복구할 수 없습니다.")) {
+      try {
+        await deletePost(post.id);
+        alert("게시글이 정상적으로 삭제되었습니다. ✨");
+        navigate("/community"); // 삭제 후 목록으로 이동
+      } catch (error) {
+        console.error("삭제 실패:", error);
+        alert("글을 삭제하는 중 오류가 발생했습니다.");
+      }
     }
   };
 
@@ -82,11 +112,9 @@ export default function PostDetail() {
             <p className="text-zinc-400 whitespace-pre-wrap">{post.content}</p>
           </div>
 
-          {/* ✅ 이미지 출력 (경로 최적화) */}
           {post.images?.length > 0 && (
             <div className="rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
               <img
-                // 서버 주소와 이미지 경로가 잘 합쳐지는지 확인!
                 src={`http://localhost:8080${post.images[0].imageUrl}`}
                 className="w-full object-cover"
                 alt="post"
@@ -95,12 +123,34 @@ export default function PostDetail() {
             </div>
           )}
 
-          <div className="flex items-center gap-6">
-            <button onClick={handleLike} disabled={isLiking} className="flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/10 text-rose-500 font-bold hover:bg-rose-500/20">
-              <Heart className={`h-5 w-5 ${post.likesCount > 0 ? 'fill-rose-500' : ''}`} /> {post.likesCount}
-            </button>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-zinc-400 font-bold">
-              <MessageCircle className="h-5 w-5" /> {post.commentCount}
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <button onClick={handleLike} disabled={isLiking} className="flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/10 text-rose-500 font-bold hover:bg-rose-500/20">
+                  <Heart className={`h-5 w-5 ${post.likesCount > 0 ? 'fill-rose-500' : ''}`} /> {post.likesCount}
+                </button>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-zinc-400 font-bold">
+                  <MessageCircle className="h-5 w-5" /> {post.commentCount}
+                </div>
+              </div>
+
+              {/* ✅ 본인 확인 로직(ID 비교) 결과에 따라 버튼 노출 */}
+              {isAuthor && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => navigate(`/community/edit/${post.id}`)}
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white transition-all"
+                  >
+                    <Edit3 className="h-4 w-4" /> 수정
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-all"
+                  >
+                    <Trash2 className="h-4 w-4" /> 삭제
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

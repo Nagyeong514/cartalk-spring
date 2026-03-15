@@ -1,6 +1,7 @@
 package com.cartalkpro.domain.member.service;
 
 import com.cartalkpro.domain.member.dto.LoginRequestDto;
+import com.cartalkpro.domain.member.dto.LoginResponseDto;
 import com.cartalkpro.domain.member.dto.SignUpRequestDto;
 import com.cartalkpro.domain.member.entity.Member;
 import com.cartalkpro.domain.member.repository.MemberRepository;
@@ -67,5 +68,30 @@ public class MemberService {
 
         // 로그인 성공 시 토큰 생성 및 반환
         return jwtProvider.createToken(member.getId(), member.getEmail(), member.getRole());
+    }
+
+    /**
+     * 로그인 로직을 처리하고 토큰, 회원ID, 이름을 포함한 DTO를 반환합니다.
+     */
+    @Transactional(readOnly = true)
+    public LoginResponseDto loginProcess(LoginRequestDto requestDto) {
+        // 1. 이메일로 회원 조회
+        Member member = memberRepository.findByEmail(requestDto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+
+        // 2. 비밀번호 일치 확인
+        if (!passwordEncoder.matches(requestDto.getPassword(), member.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 3. JWT 토큰 생성
+        String token = jwtProvider.createToken(member.getId(), member.getEmail(), member.getRole());
+
+        // 4. 로그인에 필요한 모든 정보를 가방(DTO)에 담아서 반환
+        return LoginResponseDto.builder()
+                .accessToken(token)
+                .memberId(member.getId())
+                .name(member.getName())
+                .build();
     }
 }

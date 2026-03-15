@@ -70,4 +70,30 @@ public class PostController {
         return ResponseEntity.ok(postService.getCommunityStats());
     }
 
+    // 11. 글 수정
+    // PostController.java에 추가
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Long> updatePost(
+            @PathVariable(name = "id") Long id,
+            @RequestPart(name = "requestDto") PostUpdateRequestDto requestDto,
+            @RequestPart(name = "images", required = false) List<MultipartFile> images) throws IOException {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Long updatedPostId = postService.updatePost(id, requestDto, images, email);
+        return ResponseEntity.ok(updatedPostId);
+    }
+
+    // 12. 글 삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable(name = "id") Long id) {
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        postService.deletePost(id, email);
+        return ResponseEntity.ok().build();
+    }
+
+
 }

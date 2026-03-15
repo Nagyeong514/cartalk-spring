@@ -151,6 +151,8 @@ public class PostService {
     }
 
 
+    // 10. 활동바 (visit 제외)
+
     @Transactional(readOnly = true)
     public CommunityStatsResponseDto getCommunityStats() {
         java.time.LocalDateTime startOfToday = java.time.LocalDate.now().atStartOfDay();
@@ -177,6 +179,76 @@ public class PostService {
                 .memberGrowth(8.2) // 계산 로직은 나중에 붙여도 일단 8.2로 고정!
                 .uniqueTagsCount(tagSet.size())
                 .build();
+    }
+
+    // 11. 수정
+    // PostService.java에 추가
+
+    @Transactional
+    public Long updatePost(Long id, PostUpdateRequestDto requestDto, List<MultipartFile> images, String email) throws IOException {
+        // 1. 게시글 존재 확인
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. id=" + id));
+
+        // 2. 작성자 본인 확인 (보안)
+        if (!post.getMember().getEmail().equals(email)) {
+            throw new IllegalArgumentException("수정 권한이 없습니다.");
+        }
+
+        // 3. 텍스트 정보 업데이트 (Dirty Checking 활용)
+        // Post 엔티티에 update 메서드가 구현되어 있어야 합니다.
+        post.update(requestDto);
+
+        // 4. 이미지 처리 (전체 교체 방식)
+        if (images != null && !images.isEmpty()) {
+            // (1) 기존 물리 파일 삭제
+            for (PostImage oldImage : post.getImages()) {
+                // imageUrl에서 파일명만 추출하여 삭제 (예: /images/uuid.png -> uuid.png)
+                String fileName = oldImage.getImageUrl().replace("/images/", "");
+                fileService.deleteFile(fileName); // FileService에 파일 삭제 로직이 필요합니다.
+            }
+
+            // (2) 기존 DB 이미지 레코드 삭제
+            post.getImages().clear();
+
+            // (3) 새로운 이미지 파일 저장 및 DB 등록
+            for (MultipartFile image : images) {
+                String storeFilename = fileService.storeFile(image);
+                PostImage postImage = PostImage.builder()
+                        .post(post)
+                        .imageUrl("/images/" + storeFilename)
+                        .originName(image.getOriginalFilename())
+                        .build();
+                post.getImages().add(postImage);
+            }
+        }
+
+        return post.getId();
+    }
+
+    // 12. 삭제
+    // PostService.java에 추가
+
+    @Transactional
+    public void deletePost(Long id, String email) {
+        // 1. 게시글 존재 확인
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다. id=" + id));
+
+        // 2. 작성자 본인 확인
+        if (!post.getMember().getEmail().equals(email)) {
+            throw new IllegalArgumentException("삭제 권한이 없습니다.");
+        }
+
+        // 3. 서버 내 실제 물리 파일 삭제
+        for (PostImage image : post.getImages()) {
+            // imageUrl에서 파일명만 추출 (예: /images/uuid.png -> uuid.png)
+            String fileName = image.getImageUrl().replace("/images/", "");
+            fileService.deleteFile(fileName);
+        }
+
+        // 4. DB 레코드 삭제 (CascadeType.ALL과 orphanRemoval=true 설정으로 이미지/댓글도 함께 삭제됨)
+        postRepository.delete(post);
     }
 
 }

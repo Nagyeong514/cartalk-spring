@@ -11,6 +11,7 @@ import LoginPage from "./pages/auth/LoginPage"
 import SignUpPage from "./pages/auth/SignUpPage"
 import PostList from "./pages/community/PostList"
 import PostWrite from "./pages/community/PostWrite"
+import PostEdit from "./pages/community/PostEdit"
 import PostDetail from "./pages/community/PostDetail"
 import GuardianPage from "./pages/mycar/GuardianPage"
 import AdminDashboard from "./pages/admin/AdminDashboard"
@@ -33,6 +34,7 @@ function App() {
           <Route path="/guardian" element={<GuardianPage />} />
           <Route path="/community" element={<PostList />} />
           <Route path="/community/write" element={<PostWrite />} />
+          <Route path="/community/edit/:id" element={<PostEdit />} />
           <Route path="/community/:id" element={<PostDetail />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Route>

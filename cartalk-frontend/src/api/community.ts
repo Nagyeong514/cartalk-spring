@@ -4,6 +4,7 @@ import apiClient from '../apiClient';
 
 export interface PostListResponse {
   id: number;
+  authorId: number; // ✅ 추가: 백엔드에서 보내주는 authorId를 받기 위해!
   category: string;
   carTag: string;
   title: string;
@@ -94,4 +95,18 @@ export const getTrendingPosts = async () => {
 export const getCommunityStats = async () => {
   const response = await apiClient.get<CommunityStatsResponse>('/api/community/posts/stats');
   return response.data;
+};
+
+// 11. 글 수정
+export const updatePost = async (id: number, formData: FormData) => {
+  const response = await apiClient.put(`/api/community/posts/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+
+// 12. 글 삭제
+export const deletePost = async (id: number) => {
+  await apiClient.delete(`/api/community/posts/${id}`);
 };

@@ -12,6 +12,7 @@ public class PostDetailResponseDto {
     private String category;
     private String title;
     private String content;
+    private Long authorId;      // 작성자 고유 넘버
     private String authorName;
     private String carTag;      // ✅ 추가: 태그도 상세에 보여주면 좋아요
     private int viewCount;
@@ -25,6 +26,7 @@ public class PostDetailResponseDto {
         this.category = post.getCategory();
         this.title = post.getTitle();
         this.content = post.getContent();
+        this.authorId = post.getMember().getId(); // 작성자 고유 넘버
         this.authorName = post.getMember().getName();
         this.carTag = post.getCarTag(); // ✅ 추가
         this.viewCount = post.getViewCount();
