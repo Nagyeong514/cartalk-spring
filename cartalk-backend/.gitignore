@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### API 아 진짜 망할뻔했당 ㅎㅎㅎ ###
+src/main/resources/application-secret.properties
