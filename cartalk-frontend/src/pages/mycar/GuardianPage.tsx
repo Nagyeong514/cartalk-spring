@@ -3,6 +3,7 @@ import {
   Gauge, AlertTriangle, Droplets, Wrench, FileText, Camera, ClipboardCheck,
   ShieldAlert, X, Star, CalendarPlus, Mail, Phone, MapPin, Sun, Info
 } from "lucide-react";
+import RepairMapPanel from "./RepairMapPanel";
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 export type TabKey = "summary" | "photos" | "evaluation" | "guardian" | "repair" | "carwash";
@@ -308,11 +309,22 @@ export default function GuardianPage() {
           })}
         </nav>
 
-        <div className={`grid flex-1 gap-6 transition-all duration-500 ${activeTab !== null ? "lg:grid-cols-[1fr_2.5fr]" : "lg:grid-cols-1"}`}>
-          <CarHero shrink={activeTab !== null} carData={carData} />
-          <SlidePanel activeTab={activeTab} onClose={() => setActiveTab(null)} recalls={recalls} />
+        {/* 하단 콘텐츠 영역 - 여기가 나경님이 원하신 스마트 스위치! */}
+        <div className="flex-1 min-h-[600px]">
+          {activeTab === "repair" ? (
+            <div className="h-full w-full animate-in fade-in zoom-in-95 duration-500">
+              {/* ✅ 여기서 수리 탭 전용 지도 레이아웃 호출! */}
+              <RepairMapPanel carBrand={carData?.manufacturer || "Hyundai"} />
+            </div>
+          ) : (
+            <div className={`grid h-full gap-6 transition-all duration-500 ${activeTab !== null ? "lg:grid-cols-[1fr_2.5fr]" : "lg:grid-cols-1"}`}>
+              <CarHero shrink={activeTab !== null} carData={carData} />
+              <SlidePanel activeTab={activeTab} onClose={() => setActiveTab(null)} recalls={recalls} />
+            </div>
+          )}
         </div>
       </main>
     </div>
   );
 }
+

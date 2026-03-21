@@ -22,6 +22,10 @@ public class Vehicle extends BaseTimeEntity {       // [날짜 상속] 생성/�
     @JoinColumn(name = "members_id") // SQL의 FK 컬럼명과 맞춤     // [외래키] DB 테이블의 members_id 컬럼과 연결됨
     private Member member;
 
+    // ✅ 추가: 제조사 (예: 현대, 기아, 벤츠, BMW 등)
+    @Column(nullable = false)
+    private String manufacturer;
+
     @Column(nullable = false)   // [필수] 모델명은 비어있을 수 없음
     private String modelName;
 
